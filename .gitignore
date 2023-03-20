@@ -29,3 +29,6 @@
 
 # Dependency directories
 vendor/
+
+# Built binaries
+build/

@@ -1,45 +1,37 @@
 package handler
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/application/dto"
 	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/business/port"
+	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/server"
 	"github.com/yael-castro/cb-search-engine-api/internal/domain/support/pagination"
 	"net/http"
 )
 
-// RecipeProvider defines a primary adapter to handle all http request related to recipe finder
-type RecipeProvider interface {
-	// ProvideRecipe handle http request to find recipes by ingredients
-	ProvideRecipe(echo.Context) error
-}
+// NewRecipeEngine builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipeSearcher
+func NewRecipeEngine(searcher port.RecipeSearcher, handler server.ErrorHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
 
-// NewRecipeProvider builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipeSearcher
-func NewRecipeProvider(searcher port.RecipeSearcher) RecipeProvider {
-	return recipeFinder{Searcher: searcher}
-}
+		p := pagination.New(q.Get("page"), q.Get("limit"))
 
-type recipeFinder struct {
-	Searcher port.RecipeSearcher
-}
+		recipes, err := searcher.SearchRecipe(r.Context(), q.Get("ingredients"), p)
+		if err != nil {
+			handler.HandleError(w, r, err)
+			return
+		}
 
-func (r recipeFinder) ProvideRecipe(c echo.Context) error {
-	p := pagination.New(c.QueryParam("page"), c.QueryParam("limit"))
+		items := make([]*dto.Recipe, 0, len(recipes))
+		for _, recipe := range recipes {
+			items = append(items, dto.NewRecipe(recipe))
+		}
 
-	recipes, err := r.Searcher.SearchRecipe(c.Request().Context(), c.QueryParam("ingredients"), p)
-	if err != nil {
-		return err
+		page := dto.RecipePage{
+			Items:      items,
+			TotalPages: p.Pages(),
+			TotalItems: p.TotalResults(),
+		}
+
+		_ = server.JSON(w, http.StatusOK, page)
 	}
-
-	items := make([]*recipeItem, 0, len(recipes))
-	for _, recipe := range recipes {
-		items = append(items, (*recipeItem)(recipe))
-	}
-
-	page := recipePage{
-		Items:      items,
-		TotalPages: p.Pages(),
-		TotalItems: p.TotalResults(),
-	}
-
-	return c.JSON(http.StatusOK, page)
 }

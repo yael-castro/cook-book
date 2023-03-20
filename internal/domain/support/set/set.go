@@ -23,10 +23,10 @@ func (s *Set[T]) Put(item T) error {
 	return nil
 }
 
-// Exists returns a bool that indicates if the item already exists in the Set
+// Has returns a bool that indicates if the item already exists in the Set
 //
 // Complexity: O(1)
-func (s *Set[T]) Exists(item T) bool {
+func (s *Set[T]) Has(item T) bool {
 	_, ok := (*s)[item]
 	return ok
 }

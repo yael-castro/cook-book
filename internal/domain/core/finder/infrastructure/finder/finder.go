@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/business/model"
 	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/business/port"
-	recipes "github.com/yael-castro/cb-search-engine-api/internal/domain/core/recipes/business/model"
+	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/infrastructure/dto"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,12 +21,25 @@ type recipeFinder struct {
 	RecipeCollection *mongo.Collection
 }
 
-func (s recipeFinder) FindRecipe(ctx context.Context, search *model.RecipeFilter) (slice []*recipes.Recipe, err error) {
-	sorted := options.Find().SetSort(bson.D{{"_id", 1}}) // Use pool pattern?
+func (s recipeFinder) FindRecipe(ctx context.Context, search *model.RecipeFilter) (slice []*model.Recipe, err error) {
+	sorted := options.Find().SetSort(bson.D{ // TODO: use pool pattern?
+		{Key: "_id", Value: 1},
+	})
 
-	opts := []*options.FindOptions{sorted.SetSkip(int64(search.Start())), sorted.SetLimit(int64(search.Limit()))}
+	opts := []*options.FindOptions{
+		sorted.SetSkip(int64(search.Start())),
+		sorted.SetLimit(int64(search.Limit())),
+	}
 
-	searchFilter := bson.D{{"ingredients", bson.D{{"$all", search.Ingredients.Slice()}}}}
+	searchFilter := bson.D{
+		{
+			Key: "ingredients", Value: bson.D{
+				{
+					Key: "$all", Value: search.Ingredients.Slice(),
+				},
+			},
+		},
+	}
 
 	totalResults, err := s.RecipeCollection.CountDocuments(ctx, searchFilter)
 	if err != nil {
@@ -44,16 +57,16 @@ func (s recipeFinder) FindRecipe(ctx context.Context, search *model.RecipeFilter
 		return nil, err
 	}
 
-	// Avoid the method cursor.All() because it uses reflection to iterate the cursor values
+	// NOTE: avoid the method cursor.All() because it uses reflection to iterate the cursor values
 	for cursor.Next(ctx) {
-		recipe := recipes.Recipe{}
+		recipe := &dto.Recipe{}
 
-		err = cursor.Decode(&recipe)
+		err = cursor.Decode(recipe)
 		if err != nil {
 			return
 		}
 
-		slice = append(slice, &recipe)
+		slice = append(slice, (*model.Recipe)(recipe))
 	}
 
 	return

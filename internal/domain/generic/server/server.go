@@ -1,58 +1,68 @@
-// Package server contains everything related to server
+// Package server contains everything related to api in a client-api model
+//
+// NOTE: this package should be in a library
 package server
 
 import (
 	"context"
-	"github.com/labstack/echo/v4"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/support/wrong"
+	"fmt"
+	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/server/response"
 	"net/http"
+	"strings"
 )
 
 type Configuration struct {
-	SearchEngine echo.HandlerFunc
-	ErrorHandler echo.HTTPErrorHandler
+	RouteMap map[string]map[string]http.Handler
 }
 
-// New builds a http server that complies the Server interface based on the Configuration received
-func New(config Configuration) Server {
-	e := echo.New()
-
-	if config.ErrorHandler != nil {
-		e.HTTPErrorHandler = config.ErrorHandler
-	}
-
-	e.GET("/v1/recipes/suggestions", config.SearchEngine)
-
-	return &server{Echo: e}
-}
-
-// Server defines a server in the model client-server
+// Server defines a api in the model client-api
 type Server interface {
 	// Serve running the server on the address specified until the context is canceled
 	Serve(context.Context, string) error
 }
 
-type server struct {
-	*echo.Echo
-}
+// New builds a http api that complies the Server interface based on the Router received
+func New(config Configuration) Server {
+	routes := config.RouteMap
 
-func (s server) Serve(ctx context.Context, address string) error {
-	go func() {
-		<-ctx.Done()
-		s.Close()
-	}()
-
-	return s.Start(address)
-}
-
-// DefaultErrorHandler default error handler to manage the http status code based on a error
-func DefaultErrorHandler(err error, c echo.Context) {
-	switch err := err.(type) {
-	case wrong.Validation:
-		c.JSON(http.StatusBadRequest, err.Error())
-	case *echo.HTTPError:
-		c.JSON(err.Code, err.Error())
-	default:
-		c.JSON(http.StatusInternalServerError, err.Error())
+	s := &server{
+		ServeMux: http.NewServeMux(),
 	}
+
+	for route := range routes {
+		for method, handler := range routes[route] {
+			s.setRoute(method, route, handler)
+		}
+	}
+
+	return s
+}
+
+type server struct {
+	*http.ServeMux
+}
+
+func (s *server) setRoute(method string, path string, handler http.Handler) {
+	if strings.HasSuffix(path, "/") {
+		path = path[:len(path)-1]
+	}
+
+	s.ServeMux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			JSON(w, http.StatusMethodNotAllowed, &response.Common{
+				Message: fmt.Sprintf("method '%s' is not allowed", r.Method),
+			})
+			return
+		}
+
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func (s *server) Serve(ctx context.Context, address string) error {
+	go http.ListenAndServe(address, s.ServeMux)
+
+	<-ctx.Done()
+
+	return ctx.Err()
 }
