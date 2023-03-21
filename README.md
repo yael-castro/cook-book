@@ -1,21 +1,34 @@
 # Cook book - Search engine
-
-###### Domain
 The main activity area (domain) of this project is to provide an API to search recipes by ingredients.
 
-###### REST API
+### About the project
+This project is compose of two parts very important.
+The first part is the `Search engine` and the second is the `Internal tool`
+
+###### Search engine
+The search engine is resumed in a REST API to expose the 
+
+###### Internal tool
+The search engine is resumed in a CLI to perform operations that help
+to test and monitoring the 
+
+### Architecture pattern
+```
+
+```
+
+### How to build
+
+Follow the instructions below to compile each thing
 
 ###### CLI
-
-
-###### How to build binaries
-
-This project is compose of two important parts for the 
-
+To compile the Command Line Interface execute the command below.
 ```shell
 make cli
 ```
 
+###### REST API
+To compile the REST API execute the command below.
 ```shell
 make server
 ```
