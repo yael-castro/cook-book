@@ -4,11 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/recipes/application/command"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/recipes/business/logic"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/recipes/infrastructure/store"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/cli"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/connection"
+	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/logic"
+	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/input/command"
+	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/output/storage"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/cli"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/connection"
 	"os"
 )
 
@@ -54,7 +54,7 @@ func (c container) Inject(a any) error {
 
 	recipeCollection := db.Collection("recipes")
 
-	recipeStore := store.NewRecipeStore(recipeCollection)
+	recipeStore := storage.NewRecipeStore(recipeCollection)
 	recipeSetGenerator := logic.NewRecipeSetGenerator(recipeStore)
 	recipeListGenerator := command.NewRecipeListGenerator(recipeSetGenerator)
 

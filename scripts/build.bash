@@ -12,17 +12,12 @@ if [ "$subcommand" = "cli" ]; then
   cd cmd/cli
   path="$module/cmd/cli/container"
 
-  printf "DSN:"
-  if ! read -r dsn ; then
-    exit
-  fi
+  printf "\nTo compile the CLI the following variables are required.\n\n"
 
-  printf "DB:"
-  if ! read -r db ; then
-    exit
-  fi
+  read -rp "DB (test): " db
+  read -rp "DSN (mongodb://localhost:27017): " dsn
 
-  echo "Building CLI in \"/build\" directory"
+  printf "\nBuilding CLI in \"/build\" directory\n"
 
   if ! CGO=0 go build \
     -o ../../build/ \
@@ -31,7 +26,11 @@ if [ "$subcommand" = "cli" ]; then
     exit
   fi
 
+  cd ../../
+
+  echo "MD5 checksum: $(md5sum build/cli)"
   echo "Success build"
+
   exit
 fi
 
@@ -39,7 +38,7 @@ if [ "$subcommand" = "server" ]; then
   cd cmd/server
   path="$module/cmd/server/container"
 
-  echo "Building API REST in \"/build\" directory"
+  printf "\nBuilding API REST in \"/build\" directory\n"
 
   if ! CGO=0 go build \
     -o ../../build/ \
@@ -48,7 +47,11 @@ if [ "$subcommand" = "server" ]; then
     exit
   fi
 
+   cd ../../
+
+  echo "MD5 checksum: $(md5sum build/server)"
   echo "Success build"
+
   exit
 fi
 

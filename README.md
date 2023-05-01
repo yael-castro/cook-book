@@ -1,34 +1,36 @@
-# Cook book - Search engine
-The main activity area (domain) of this project is to provide an API to search recipes by ingredients.
+# Cook Book  - API
+The purpose of the project is to provide an API to manage recipes and ingredients in order to search for recipes by ingredients.
 
-### About the project
+### More about the project
 This project is compose of two parts very important.
-The first part is the `Search engine` and the second is the `Internal tool`
+The first part is the `REST API` that expose the endpoints to query and manage recipes
+and the second is the `CLI` to manage internal operations and help to test the search engine.
 
-###### Search engine
-The search engine is resumed in a REST API to expose the 
+### Getting started
 
-###### Internal tool
-The search engine is resumed in a CLI to perform operations that help
-to test and monitoring the 
+###### How to run
 
-### Architecture pattern
+```shell
+make run
 ```
 
-```
+### How to build the binary files
 
-### How to build
-
-Follow the instructions below to compile each thing
+Follow the instructions below to compile the binaries in the **/build** directory
 
 ###### CLI
-To compile the Command Line Interface execute the command below.
 ```shell
 make cli
 ```
 
 ###### REST API
-To compile the REST API execute the command below.
 ```shell
 make server
+```
+
+### Architecture pattern
+This project implements architecture pattern "ports and adapters"
+
+```
+
 ```

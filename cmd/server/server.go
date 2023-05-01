@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"github.com/yael-castro/cb-search-engine-api/cmd/server/container"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/server"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 )
@@ -32,14 +32,25 @@ func main() {
 	}()
 
 	// DI container in action!
-	var s server.Server
+	var h http.Handler
 
-	err := container.New().Inject(&s)
+	err := container.New().Inject(&h)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Builds the server
+	server := http.Server{
+		Addr:    ":" + port,
+		Handler: h,
+	}
+
+	go func() {
+		<-ctx.Done()
+		server.Close()
+	}()
+
 	// Runs the server
 	log.Printf("Server version '%s' is running on port '%s'\n", container.GitCommit, port)
-	log.Println(s.Serve(ctx, ":"+port))
+	log.Println(server.ListenAndServe())
 }

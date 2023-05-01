@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/yael-castro/cb-search-engine-api/cmd/cli/container"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/cli"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/cli"
 	"log"
 	"os"
 	"os/signal"

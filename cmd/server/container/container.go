@@ -1,15 +1,15 @@
 package container
 
 import (
-	"context"
 	"fmt"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/application/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/business/logic"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/core/finder/infrastructure/finder"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/connection"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/server"
-	"github.com/yael-castro/cb-search-engine-api/internal/domain/generic/server/health"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	rcplgc "github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/logic"
+	rcphlr "github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/input/handler"
+	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/output/storage"
+	fndlgc "github.com/yael-castro/cb-search-engine-api/internal/core/searches/business/logic"
+	fndhlr "github.com/yael-castro/cb-search-engine-api/internal/core/searches/infrastructure/input/handler"
+	"github.com/yael-castro/cb-search-engine-api/internal/core/searches/infrastructure/output/finder"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/connection"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/server"
 	"net/http"
 	"os"
 )
@@ -27,7 +27,7 @@ func New() Container {
 type container struct{}
 
 func (c container) Inject(a any) error {
-	s, ok := a.(*server.Server)
+	h, ok := a.(*http.Handler)
 	if !ok {
 		return fmt.Errorf("type \"%T\" is not supported", a)
 	}
@@ -38,38 +38,28 @@ func (c container) Inject(a any) error {
 		return err
 	}
 
+	// MongoDB collections
 	recipeCollection := db.Collection("recipes")
 
 	// Secondary adapters
 	recipeFinder := finder.NewRecipeFinder(recipeCollection)
+	recipeStore := storage.NewRecipeStore(recipeCollection)
 
 	// Ports for primary adapters
-	recipeSearcher := logic.NewRecipeSearcher(recipeFinder)
+	recipeSearcher := fndlgc.NewRecipeSearcher(recipeFinder)
+	recipeManager := rcplgc.NewRecipeManager(recipeStore)
 
 	// Primary adapters
-	recipeEngine := handler.NewRecipeEngine(recipeSearcher, handler.NewErrorHandler())
-
-	// Server settings
-	config := server.Configuration{
-		RouteMap: map[string]map[string]http.Handler{
-			"/v1/recipes": {
-				http.MethodGet: recipeEngine,
-			},
-			"/v1/health/checks": {
-				http.MethodGet: http.HandlerFunc(health.NewChecker(health.Config{
-					Version: GitCommit,
-					PingMap: map[string]health.Ping{
-						"mongodb": func(ctx context.Context) error {
-							return db.Client().Ping(ctx, readpref.Primary())
-						},
-					},
-				}).Check),
-			},
-		},
-	}
+	recipeEngine := fndhlr.NewRecipeEngine(recipeSearcher, fndhlr.ErrorHandler())
+	recipeCreator := rcphlr.NewRecipeCreator(recipeManager, rcphlr.ErrorHandler())
 
 	// Builds HTTP server
-	*s = server.New(config)
+	*h = server.New(server.Config{
+		Maps: []server.RouteMap{
+			fndhlr.RouteMap(recipeEngine),
+			rcphlr.RouteMap(recipeCreator),
+		},
+	})
 
 	return err
 }
