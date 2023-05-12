@@ -3,7 +3,7 @@ package code
 
 import (
 	"errors"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/wrapper"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/errors/wrapper"
 	"strconv"
 )
 

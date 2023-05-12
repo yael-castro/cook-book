@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 )
 
 // usageTemplate is the template made to indicate how to the CLI must be use
@@ -36,12 +37,9 @@ type Configuration struct {
 	Description string
 	// FlagSet initial flag set
 	FlagSet *flag.FlagSet
-	// Commands contains a hash map to identify and process the subcommands
-	Commands map[string]Command
+	// Commanders contains a hash map to identify and process the subcommands
+	Commanders map[string]Commander
 }
-
-// Command defines a function to handle command line inputs for sub-commands
-type Command func(context.Context, ...string) error
 
 // New builds a CLI based on the Configuration
 func New(config Configuration) CLI {
@@ -49,7 +47,7 @@ func New(config Configuration) CLI {
 		version:     config.Version,
 		description: config.Description,
 		flagSet:     config.FlagSet,
-		commands:    config.Commands,
+		commanders:  config.Commanders,
 	}
 }
 
@@ -63,14 +61,14 @@ type cli struct {
 	version     string
 	description string
 	flagSet     *flag.FlagSet
-	commands    map[string]Command
+	commanders  map[string]Commander
 }
 
 // usage prints how to use the CLI
 func (c *cli) usage() {
 	usage := usageTemplate
 
-	for cmd := range c.commands {
+	for cmd := range c.commanders {
 		usage += "  " + cmd + "\n"
 	}
 
@@ -78,6 +76,8 @@ func (c *cli) usage() {
 }
 
 func (c *cli) Execute(ctx context.Context) error {
+	checkpoint := time.Now()
+
 	if !c.flagSet.Parsed() {
 		c.flagSet.Parse(os.Args[1:])
 	}
@@ -96,10 +96,19 @@ func (c *cli) Execute(ctx context.Context) error {
 		return nil
 	}
 
-	command, ok := c.commands[subcommand]
+	commander, ok := c.commanders[subcommand]
 	if !ok {
-		return fmt.Errorf("invalid sub-command: \"%s\" does not exists", subcommand)
+		return fmt.Errorf("invalid sub-commander: \"%s\" does not exists", subcommand)
 	}
 
-	return command(ctx, append([]string{subcommand}, args[1:]...)...)
+	err := commander.Command(ctx, append([]string{subcommand}, args[1:]...)...)
+	if err != nil {
+		if helper, ok := commander.(Helper); ok {
+			helper.Help()
+		}
+		return err
+	}
+
+	log.Println("\nExecution time:", time.Now().Sub(checkpoint))
+	return nil
 }

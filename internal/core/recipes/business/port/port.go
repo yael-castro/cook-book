@@ -23,6 +23,10 @@ type (
 
 // Ports for drive adapters
 type (
+	RecipesGenerator interface {
+		GenerateRecipes(uint32, uint32) ([]*model.Recipe, error)
+	}
+
 	// RecipeStore defines the common operations to manage the recipe storage
 	RecipeStore interface {
 		CreateRecipes(context.Context, ...*model.Recipe) error

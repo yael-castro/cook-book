@@ -6,7 +6,7 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/core/searches/business/model"
 	"github.com/yael-castro/cb-search-engine-api/internal/core/searches/business/model/consts"
 	"github.com/yael-castro/cb-search-engine-api/internal/core/searches/business/port"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/code"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/errors/code"
 	"github.com/yael-castro/cb-search-engine-api/internal/lib/pagination"
 	"github.com/yael-castro/cb-search-engine-api/internal/lib/set"
 	"log"

@@ -4,17 +4,17 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/model"
 	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/port"
 	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/input/dto"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/server"
+	server2 "github.com/yael-castro/cb-search-engine-api/internal/lib/server"
 	"github.com/yael-castro/cb-search-engine-api/internal/lib/server/response"
 	"net/http"
 )
 
-func NewRecipeCreator(manager port.RecipeManager, handler server.ErrorHandler) http.HandlerFunc {
+func NewRecipeCreator(manager port.RecipeManager, handler server2.ErrorHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		recipes := make([]dto.Recipe, 0)
 
 		// Unmarshal the request body
-		if !server.Bind(w, r, &recipes) {
+		if !server2.Bind(w, r, &recipes) {
 			return
 		}
 
@@ -34,7 +34,7 @@ func NewRecipeCreator(manager port.RecipeManager, handler server.ErrorHandler) h
 		}
 
 		// Success response
-		server.JSON(w, http.StatusCreated, response.Common{
+		server2.JSON(w, http.StatusCreated, response.Common{
 			Message: "Success operation",
 		})
 	}

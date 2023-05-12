@@ -11,15 +11,15 @@ import (
 type RouteMap map[string]map[string]http.Handler
 
 type Config struct {
-	Maps []RouteMap
+	RouteMaps []RouteMap
 }
 
 // New builds a http api that complies the Server interface based on the Router received
 func New(config Config) http.Handler {
 	s := &server{}
 
-	for _, mapper := range config.Maps {
-		for route, routes := range mapper {
+	for _, routeMap := range config.RouteMaps {
+		for route, routes := range routeMap {
 			for method, handler := range routes {
 				s.setRoute(method, route, handler)
 			}

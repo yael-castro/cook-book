@@ -2,7 +2,7 @@ package server
 
 import (
 	"errors"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/code"
+	"github.com/yael-castro/cb-search-engine-api/internal/lib/errors/code"
 	"github.com/yael-castro/cb-search-engine-api/internal/lib/server/response"
 	"net/http"
 )

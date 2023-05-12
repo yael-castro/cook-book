@@ -55,7 +55,7 @@ func (c container) Inject(a any) error {
 
 	// Builds HTTP server
 	*h = server.New(server.Config{
-		Maps: []server.RouteMap{
+		RouteMaps: []server.RouteMap{
 			fndhlr.RouteMap(recipeEngine),
 			rcphlr.RouteMap(recipeCreator),
 		},

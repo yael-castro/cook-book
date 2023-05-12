@@ -7,12 +7,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 )
 
 func main() {
-	checkpoint := time.Now()
-
 	// Sets logger flags
 	log.SetFlags(0)
 
@@ -38,8 +35,6 @@ func main() {
 	// Runs the CLI
 	err = c.Execute(ctx)
 	if err != nil {
-		log.Println(err)
+		log.Println("ERROR |", err)
 	}
-
-	log.Println("\nexecution time:", time.Now().Sub(checkpoint))
 }
