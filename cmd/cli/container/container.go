@@ -4,12 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/logic"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/input/command"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/output/generator"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/output/storage"
-	cli2 "github.com/yael-castro/cb-search-engine-api/internal/lib/cli"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/connection"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/command"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/generator"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/storage"
+	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
+	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"os"
 )
 
@@ -35,7 +35,7 @@ func New() Container {
 type container struct{}
 
 func (c container) Inject(a any) error {
-	cl, ok := a.(*cli2.CLI)
+	cl, ok := a.(*cli.CLI)
 	if !ok {
 		return fmt.Errorf("type \"%T\" is not supported", a)
 	}
@@ -60,16 +60,16 @@ func (c container) Inject(a any) error {
 	recipeSetGenerator := logic.NewRecipeSetGenerator(recipesGenerator, recipeStore)
 	recipeListGenerator := command.NewRecipeListGenerator(recipeSetGenerator)
 
-	config := cli2.Configuration{
+	config := cli.Configuration{
 		Version:     GitCommit,
 		Description: "is a tool for managing the recipes storage and can test the search engine.",
-		Commanders: map[string]cli2.Commander{
+		Commanders: map[string]cli.Commander{
 			"generate": recipeListGenerator,
 		},
 		FlagSet: flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
 
-	*cl = cli2.New(config)
+	*cl = cli.New(config)
 
 	return nil
 }

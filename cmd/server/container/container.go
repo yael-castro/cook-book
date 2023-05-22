@@ -2,14 +2,12 @@ package container
 
 import (
 	"fmt"
-	rcplgc "github.com/yael-castro/cb-search-engine-api/internal/core/recipes/business/logic"
-	rcphlr "github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/recipes/infrastructure/output/storage"
-	fndlgc "github.com/yael-castro/cb-search-engine-api/internal/core/searches/business/logic"
-	fndhlr "github.com/yael-castro/cb-search-engine-api/internal/core/searches/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/core/searches/infrastructure/output/finder"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/connection"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/server"
+	rcplgc "github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/finder"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/storage"
+	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
+	"github.com/yael-castro/cb-search-engine-api/pkg/server"
 	"net/http"
 	"os"
 )
@@ -46,18 +44,17 @@ func (c container) Inject(a any) error {
 	recipeStore := storage.NewRecipeStore(recipeCollection)
 
 	// Ports for primary adapters
-	recipeSearcher := fndlgc.NewRecipeSearcher(recipeFinder)
+	recipeSearcher := rcplgc.NewRecipeSearcher(recipeFinder)
 	recipeManager := rcplgc.NewRecipeManager(recipeStore)
 
 	// Primary adapters
-	recipeEngine := fndhlr.NewRecipeEngine(recipeSearcher, fndhlr.ErrorHandler())
-	recipeCreator := rcphlr.NewRecipeCreator(recipeManager, rcphlr.ErrorHandler())
+	searcher := handler.NewRecipeEngine(recipeSearcher, handler.ErrorHandler())
+	creator := handler.NewRecipeCreator(recipeManager, handler.ErrorHandler())
 
 	// Builds HTTP server
 	*h = server.New(server.Config{
 		RouteMaps: []server.RouteMap{
-			fndhlr.RouteMap(recipeEngine),
-			rcphlr.RouteMap(recipeCreator),
+			handler.RouteMap(creator, searcher),
 		},
 	})
 

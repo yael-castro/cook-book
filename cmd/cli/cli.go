@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/yael-castro/cb-search-engine-api/cmd/cli/container"
-	"github.com/yael-castro/cb-search-engine-api/internal/lib/cli"
+	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
 	"log"
 	"os"
 	"os/signal"
@@ -24,7 +24,7 @@ func main() {
 		cancel()
 	}()
 
-	// DI container in action!
+	// DI container input action!
 	var c cli.CLI
 
 	err := container.New().Inject(&c)

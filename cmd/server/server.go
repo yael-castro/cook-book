@@ -31,7 +31,7 @@ func main() {
 		cancel()
 	}()
 
-	// DI container in action!
+	// DI container input action!
 	var h http.Handler
 
 	err := container.New().Inject(&h)

@@ -1,5 +1,5 @@
 # Cook Book  - API
-The purpose of the project is to provide an API to manage recipes and ingredients in order to search for recipes by ingredients.
+The purpose of the project is to provide an API to manage recipes and memory in order to search for recipes by memory.
 
 ### Getting started
 This project is compose of multiple parts very important.
