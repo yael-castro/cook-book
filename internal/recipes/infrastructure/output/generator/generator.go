@@ -5,6 +5,7 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/model"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/port"
 	"log"
+	"math/rand"
 	"time"
 )
 
@@ -38,8 +39,7 @@ func (*recipesGenerator) generateIngredients(length uint32) []*model.Ingredient 
 	ingredients := make([]*model.Ingredient, 0, length)
 
 	for length > 0 {
-		// id := rand.Int63()
-		id := int64(1)
+		id := rand.Int63()
 
 		ingredients = append(ingredients, &model.Ingredient{
 			ID:   id,
