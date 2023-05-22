@@ -2,7 +2,7 @@ package container
 
 import (
 	"fmt"
-	rcplgc "github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/finder"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/storage"
@@ -44,8 +44,8 @@ func (c container) Inject(a any) error {
 	recipeStore := storage.NewRecipeStore(recipeCollection)
 
 	// Ports for primary adapters
-	recipeSearcher := rcplgc.NewRecipeSearcher(recipeFinder)
-	recipeManager := rcplgc.NewRecipeManager(recipeStore)
+	recipeSearcher := logic.NewRecipeSearcher(recipeFinder)
+	recipeManager := logic.NewRecipeManager(recipeStore)
 
 	// Primary adapters
 	searcher := handler.NewRecipeEngine(recipeSearcher, handler.ErrorHandler())

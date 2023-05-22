@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 // NewRecipeFinder builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB storage
@@ -21,24 +22,33 @@ type recipeFinder struct {
 	RecipeCollection *mongo.Collection
 }
 
-func (s recipeFinder) FindRecipe(ctx context.Context, search *model.RecipeFilter) (slice []*model.Recipe, err error) {
+func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter) (slice []*model.Recipe, err error) {
+	log.Printf("RECIPE FILTER: %+v\n", filter)
+
 	sorted := options.Find().SetSort(bson.D{
 		{Key: "_id", Value: 1},
 	})
 
+	log.Printf("START %d LIMIT %d\n", filter.Start(), filter.Limit())
+
 	opts := []*options.FindOptions{
-		sorted.SetSkip(int64(search.Start())),
-		sorted.SetLimit(int64(search.Limit())),
+		sorted.SetSkip(int64(filter.Start())),
+		sorted.SetLimit(int64(filter.Limit())),
 	}
 
 	// Transforms the
-	ingredients := make([]bson.D, 0, len(search.Ingredients))
+	ingredients := make([]bson.D, 0, len(filter.Ingredients))
 
-	for ingredient := range search.Ingredients {
+	for ingredient := range filter.Ingredients {
 		ingredients = append(ingredients, bson.D{
-			{Key: "_id", Value: ingredient},
+			{
+				Key:   "$elemMatch",
+				Value: bson.D{{Key: "_id", Value: ingredient}},
+			},
 		})
 	}
+
+	log.Printf("INGREDIENTS: %+v", ingredients)
 
 	query := bson.D{
 		{
@@ -57,11 +67,11 @@ func (s recipeFinder) FindRecipe(ctx context.Context, search *model.RecipeFilter
 		return
 	}
 
-	if totalResults == 0 {
+	if totalResults < 1 {
 		return
 	}
 
-	search.SetTotalResults(uint64(totalResults))
+	filter.SetTotalResults(uint64(totalResults))
 
 	cursor, err := s.RecipeCollection.Find(ctx, query, opts...)
 	if err != nil {

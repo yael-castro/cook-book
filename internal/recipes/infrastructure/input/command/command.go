@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/port"
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
@@ -34,22 +33,10 @@ func (r *recipeListGenerator) Command(ctx context.Context, args ...string) error
 		return err
 	}
 
-	if *ingredients < 1 {
-		return errors.New("the number of ingredients are minor than the allowed ingredients")
-	}
-
-	if *recipes < 1 {
-		return errors.New("the number of ingredients are mayor than allowed ingredients")
-	}
-
 	return r.RecipeSetGenerator.GenerateRecipeSet(ctx, uint32(*recipes), uint32(*ingredients))
 }
 
 // Help shows the instructions to use the Command
 func (r *recipeListGenerator) Help() {
-	if r.flags == nil {
-		return
-	}
-
 	cli.Usage(r.flags)
 }
