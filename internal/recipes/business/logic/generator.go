@@ -13,19 +13,24 @@ const (
 	maxIngredientNumber = 30
 )
 
-func NewRecipeSetGenerator(generator port.RecipesGenerator, store port.RecipeStore) port.RecipeSetGenerator {
-	return &recipeSetGenerator{
-		RecipesGenerator: generator,
-		RecipeStore:      store,
+func NewRecipeSetGenerator(maker port.RecipesMaker, creator port.RecipesCreator) port.RecipesGenerator {
+	switch any(nil) {
+	case maker, creator:
+		panic("nil dependency")
+	}
+
+	return &recipesGenerator{
+		RecipesMaker:   maker,
+		RecipesCreator: creator,
 	}
 }
 
-type recipeSetGenerator struct {
-	port.RecipesGenerator
-	port.RecipeStore
+type recipesGenerator struct {
+	port.RecipesMaker
+	port.RecipesCreator
 }
 
-func (r recipeSetGenerator) GenerateRecipeSet(ctx context.Context, recipesNumber uint32, ingredientsNumber uint32) error {
+func (r recipesGenerator) GenerateRecipes(ctx context.Context, recipesNumber uint32, ingredientsNumber uint32) error {
 	if ingredientsNumber < minIngredientNumber {
 		return code.New(consts.InvalidMin, fmt.Sprintf("recipes needs at least %d ingredients", minIngredientNumber))
 	}
@@ -34,7 +39,7 @@ func (r recipeSetGenerator) GenerateRecipeSet(ctx context.Context, recipesNumber
 		return code.New(consts.InvalidMax, fmt.Sprintf("recipes can only have a maximum of %d ingredients", maxIngredientNumber))
 	}
 
-	recipes, err := r.GenerateRecipes(recipesNumber, ingredientsNumber)
+	recipes, err := r.MakeRecipes(recipesNumber, ingredientsNumber)
 	if err != nil {
 		return err
 	}

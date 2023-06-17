@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/command"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/generator"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/storage"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/maker"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/writes"
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"os"
@@ -50,19 +50,19 @@ func (c container) Inject(a any) error {
 
 	db, err := connection.NewMongoDatabase(mongoDSN, mongoDB)
 	if err != nil {
-		return errors.New("failed connection: failed connection to external storage")
+		return errors.New("failed connection: failed connection to external writes")
 	}
 
 	recipeCollection := db.Collection("recipes")
 
-	recipesGenerator := generator.NewRecipesGenerator()
-	recipeStore := storage.NewRecipeStore(recipeCollection)
+	recipesGenerator := maker.NewRecipesMaker()
+	recipeStore := writes.NewRecipeCreator(recipeCollection)
 	recipeSetGenerator := logic.NewRecipeSetGenerator(recipesGenerator, recipeStore)
 	recipeListGenerator := command.NewRecipeListGenerator(recipeSetGenerator)
 
 	config := cli.Configuration{
 		Version:     GitCommit,
-		Description: "is a tool for managing the recipes storage and can test the search engine.",
+		Description: "is a tool for managing the recipes writes and can test the search engine.",
 		Commanders: map[string]cli.Commander{
 			"generate": recipeListGenerator,
 		},

@@ -8,14 +8,19 @@ import (
 	"net/http"
 )
 
-// NewRecipeEngine builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipeSearcher
-func NewRecipeEngine(searcher port.RecipeSearcher, handler server.ErrorHandler) http.HandlerFunc {
+// NewRecipesFinder builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipesSearcher
+func NewRecipesFinder(finder port.RecipesFinder, handler server.ErrorHandler) http.HandlerFunc {
+	switch any(nil) {
+	case finder, handler:
+		panic("nil dependency")
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 
 		p := pagination.New(q.Get("page"), q.Get("limit"))
 
-		recipes, err := searcher.SearchRecipe(r.Context(), q.Get("ingredients"), p)
+		recipes, err := finder.FindRecipes(r.Context(), q.Get("ingredients"), p)
 		if err != nil {
 			handler.HandleError(w, r, err)
 			return

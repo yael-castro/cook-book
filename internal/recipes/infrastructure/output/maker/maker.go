@@ -1,4 +1,4 @@
-package generator
+package maker
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-func NewRecipesGenerator() port.RecipesGenerator {
-	return &recipesGenerator{}
+func NewRecipesMaker() port.RecipesMaker {
+	return &recipesMaker{}
 }
 
-type recipesGenerator struct{}
+type recipesMaker struct{}
 
-func (r *recipesGenerator) GenerateRecipes(recipesNumber, ingredientsNumber uint32) ([]*model.Recipe, error) {
+func (r *recipesMaker) MakeRecipes(recipesNumber, ingredientsNumber uint32) ([]*model.Recipe, error) {
 	recipes := make([]*model.Recipe, 0, recipesNumber)
 	log.Printf("%d recipes will generated\n", ingredientsNumber)
 
@@ -35,7 +35,7 @@ func (r *recipesGenerator) GenerateRecipes(recipesNumber, ingredientsNumber uint
 	return recipes, nil
 }
 
-func (*recipesGenerator) generateIngredients(length uint32) []*model.Ingredient {
+func (*recipesMaker) generateIngredients(length uint32) []*model.Ingredient {
 	ingredients := make([]*model.Ingredient, 0, length)
 
 	for length > 0 {

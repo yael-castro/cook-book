@@ -1,0 +1,38 @@
+openapi: 3.0.1
+info:
+  title: Cook Book
+  description: API to manage recipes and ingredients in order to search recipes by ingredients.
+  contact:
+    email: contacto@yael.mx
+  version: 1.0.0
+servers:
+- url: http://localhost
+- url: http://localhost:8080
+tags:
+- name: recipes
+  description: everything about your kitchen recipes
+paths:
+  /v1/recipes:
+    get:
+      tags:
+      - recipes
+      operationId: searchRecipes
+      summary: searches recipes based on ingredient IDs
+      parameters: 
+        - in: query
+          name: ingredients
+          schema:
+            type: string
+            pattern: "^[0-9]+(,[0-9]+)*$"
+      
+      responses:
+        200:
+          description: Success search
+          content:
+            application/json:
+              {}
+        400:
+          description: Invalid search request
+          content:
+            application/json:
+              {}

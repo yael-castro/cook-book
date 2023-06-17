@@ -39,15 +39,22 @@ type Configuration struct {
 	FlagSet *flag.FlagSet
 	// Commanders contains a hash map to identify and process the subcommands
 	Commanders map[string]Commander
+	// Logger logger
+	Logger *log.Logger
 }
 
 // New builds a CLI based on the Configuration
 func New(config Configuration) CLI {
+	if config.Logger == nil {
+		config.Logger = log.Default()
+	}
+
 	return &cli{
 		version:     config.Version,
 		description: config.Description,
 		flagSet:     config.FlagSet,
 		commanders:  config.Commanders,
+		logger:      config.Logger,
 	}
 }
 
@@ -60,6 +67,7 @@ type CLI interface {
 type cli struct {
 	version     string
 	description string
+	logger      *log.Logger
 	flagSet     *flag.FlagSet
 	commanders  map[string]Commander
 }

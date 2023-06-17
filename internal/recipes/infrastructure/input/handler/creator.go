@@ -9,7 +9,12 @@ import (
 	"net/http"
 )
 
-func NewRecipeCreator(manager port.RecipeManager, handler server.ErrorHandler) http.HandlerFunc {
+func NewRecipesCreator(adder port.RecipesAdder, handler server.ErrorHandler) http.HandlerFunc {
+	switch any(nil) {
+	case adder, handler:
+		panic("nil dependency")
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		recipes := make([]*dto.Recipe, 0)
 
@@ -26,7 +31,7 @@ func NewRecipeCreator(manager port.RecipeManager, handler server.ErrorHandler) h
 		}
 
 		// Creates many recipes
-		err := manager.CreateRecipes(r.Context(), arr...)
+		err := adder.AddRecipes(r.Context(), arr...)
 		if err != nil {
 			handler.HandleError(w, r, err)
 			return
@@ -34,7 +39,7 @@ func NewRecipeCreator(manager port.RecipeManager, handler server.ErrorHandler) h
 
 		// Success response
 		server.JSON(w, http.StatusCreated, response.Common{
-			Message: "Success operation",
+			Message: "success operation",
 		})
 	}
 }

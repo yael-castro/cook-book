@@ -8,12 +8,6 @@ import (
 	"net/http"
 )
 
-// Logger defines a server logger
-type Logger interface {
-	// Log format and prints input console received arguments
-	Log(...any)
-}
-
 // ErrorConvertor defines a interface to convert errors input a http response
 type ErrorConvertor interface {
 	// ConvertError converts an error input a status code and also a object to response
@@ -29,8 +23,8 @@ type ErrorHandler interface {
 // ErrorHandlerConfig indicates how to build an instance of ErrorHandler
 type ErrorHandlerConfig struct {
 	Prefix string
+	Logger *log.Logger
 	Codes  map[int][]code.Code
-	Logger Logger
 }
 
 // NewErrorHandler builds an ErrorHandler based on a "map[int][]code.Code" which is used as configuration
@@ -38,6 +32,10 @@ type ErrorHandlerConfig struct {
 // NOTES:
 // - The error handler also implements the ErrorConverter interface
 func NewErrorHandler(config ErrorHandlerConfig) ErrorHandler {
+	if config.Logger == nil {
+		config.Logger = log.Default()
+	}
+
 	handler := &errorHandler{
 		prefix: config.Prefix,
 		codes:  make(map[code.Code]*int),
@@ -56,19 +54,13 @@ var _ ErrorConvertor = (*errorHandler)(nil)
 
 type errorHandler struct {
 	prefix string
-	logger Logger
+	logger *log.Logger
 	codes  map[code.Code]*int
 }
 
 func (e *errorHandler) setStatus(status int, codes ...code.Code) {
 	for _, v := range codes {
 		e.codes[v] = &status
-	}
-}
-
-func (e *errorHandler) Log(a ...any) {
-	if e.logger != nil {
-		e.logger.Log(a)
 	}
 }
 
@@ -81,7 +73,7 @@ func (e *errorHandler) ConvertError(err error) (int, *response.Common) {
 	if !ok {
 		internal, ok = errors.Unwrap(err).(code.Code)
 		if !ok {
-			e.Log(err)
+			e.logger.Println(err)
 			return http.StatusInternalServerError, &response.Common{
 				Code:    e.prefix + code.Zero.Error(),
 				Message: "an unexpected or unhandled error occurred",
@@ -91,7 +83,7 @@ func (e *errorHandler) ConvertError(err error) (int, *response.Common) {
 
 	status, ok := e.codes[internal]
 	if !ok {
-		e.Log("unknown internal status code: ", status)
+		e.logger.Println("unknown internal status code: ", status)
 		return http.StatusInternalServerError, &response.Common{
 			Code:    e.prefix + internal.Error(),
 			Message: err.Error(),

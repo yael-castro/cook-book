@@ -9,41 +9,46 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/pkg/errors/code"
 	"github.com/yael-castro/cb-search-engine-api/pkg/pagination"
 	"github.com/yael-castro/cb-search-engine-api/pkg/set"
-	"log"
+
 	"strconv"
 	"strings"
 )
 
-// NewRecipeSearcher builds a materialization for the port.RecipeSearcher interface
-func NewRecipeSearcher(finder port.RecipeFinder) port.RecipeSearcher {
-	return recipeSearcher{RecipeFinder: finder}
+// NewRecipesFinder builds a materialization for the port.RecipesSearcher interface
+func NewRecipesFinder(searcher port.RecipesSearcher) port.RecipesFinder {
+	if searcher == nil {
+		panic("nil dependency")
+	}
+
+	return &recipesSearcher{
+		RecipesSearcher: searcher,
+	}
 }
 
-type recipeSearcher struct {
-	RecipeFinder port.RecipeFinder
+type recipesSearcher struct {
+	port.RecipesSearcher
 }
 
-func (r recipeSearcher) SearchRecipe(ctx context.Context, ingredients string, pagination *pagination.Pagination) ([]*model.Recipe, error) {
-	search := &model.RecipeFilter{
+func (r recipesSearcher) FindRecipes(ctx context.Context, str string, pagination *pagination.Pagination) ([]*model.Recipe, error) {
+	filter := &model.RecipeFilter{
 		Pagination:  pagination,
 		Ingredients: make(set.Set[int64]),
 	}
 
-	if ingredients == "" {
-		return nil, code.New(consts.MissingIngredientIdentifiers, "missing ingredients to make a recipe search")
+	if str == "" {
+		return nil, code.New(consts.MissingIngredientIdentifiers, "missing ingredients to make a recipe filter")
 	}
 
-	ingredientSlice := strings.SplitN(ingredients, ",", 10)
+	ingredients := strings.SplitN(str, ",", 10)
 
-	for _, v := range ingredientSlice {
+	for _, v := range ingredients {
 		ingredient, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			log.Println(err)
 			return nil, code.New(consts.InvalidIngredientID, fmt.Sprintf("ingredient id '%s' is not valid number", v))
 		}
 
-		search.Ingredients.Put(ingredient)
+		filter.Ingredients.Put(ingredient)
 	}
 
-	return r.RecipeFinder.FindRecipe(ctx, search)
+	return r.SearchRecipes(ctx, filter)
 }

@@ -2,10 +2,11 @@ package container
 
 import (
 	"fmt"
+	"github.com/rs/cors"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/finder"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/storage"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/reads"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/writes"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server"
 	"net/http"
@@ -37,19 +38,19 @@ func (c container) Inject(a any) error {
 	}
 
 	// MongoDB collections
-	recipeCollection := db.Collection("recipes")
+	recipesCollection := db.Collection("recipes")
 
 	// Secondary adapters
-	recipeFinder := finder.NewRecipeFinder(recipeCollection)
-	recipeStore := storage.NewRecipeStore(recipeCollection)
+	recipeFinder := reads.NewRecipesSearcher(recipesCollection)
+	recipeCreator := writes.NewRecipeCreator(recipesCollection)
 
 	// Ports for primary adapters
-	recipeSearcher := logic.NewRecipeSearcher(recipeFinder)
-	recipeManager := logic.NewRecipeManager(recipeStore)
+	recipeSearcher := logic.NewRecipesFinder(recipeFinder)
+	recipeAdder := logic.NewRecipeAdder(recipeCreator)
 
 	// Primary adapters
-	searcher := handler.NewRecipeEngine(recipeSearcher, handler.ErrorHandler())
-	creator := handler.NewRecipeCreator(recipeManager, handler.ErrorHandler())
+	searcher := handler.NewRecipesFinder(recipeSearcher, handler.ErrorHandler())
+	creator := handler.NewRecipesCreator(recipeAdder, handler.ErrorHandler())
 
 	// Builds HTTP server
 	*h = server.New(server.Config{
@@ -58,5 +59,6 @@ func (c container) Inject(a any) error {
 		},
 	})
 
+	*h = cors.Default().Handler(*h)
 	return err
 }

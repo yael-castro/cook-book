@@ -3,7 +3,8 @@ package health
 
 import (
 	"context"
-	server2 "github.com/yael-castro/cb-search-engine-api/pkg/server"
+	"github.com/yael-castro/cb-search-engine-api/pkg/server"
+	"log"
 	"net/http"
 )
 
@@ -14,9 +15,10 @@ type Ping func(context.Context) error
 type Config struct {
 	// Version indicates the server version
 	Version string
-	// PingMap functions to monitor the health to external repositories
+	// PingMap functions to monitor the health to external repository connections
 	PingMap map[string]Ping
-	Logger  server2.Logger
+	// Logger logger to sets the
+	Logger *log.Logger
 }
 
 // Checker defines a health checker for the server.Server
@@ -27,16 +29,21 @@ type Checker interface {
 
 // NewChecker builds a health checker for the server based on the Config
 func NewChecker(config Config) Checker {
+	if config.Logger == nil {
+		config.Logger = log.Default()
+	}
+
 	return &checker{
 		Version: config.Version,
 		PingMap: config.PingMap,
+		logger:  config.Logger,
 	}
 }
 
 type checker struct {
 	Version string
 	PingMap map[string]Ping
-	Logger  server2.Logger
+	logger  *log.Logger
 }
 
 func (c checker) Check(w http.ResponseWriter, r *http.Request) {
@@ -46,11 +53,8 @@ func (c checker) Check(w http.ResponseWriter, r *http.Request) {
 	for service, ping := range c.PingMap {
 		err := ping(r.Context())
 		if err != nil {
-			if c.Logger != nil {
-				c.Logger.Log()
-			}
-
 			unavailable = true
+			c.logger.Println(err)
 			services[service] = "PING"
 			continue
 		}
@@ -63,7 +67,7 @@ func (c checker) Check(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusServiceUnavailable
 	}
 
-	_ = server2.JSON(w, status, map[string]any{
+	_ = server.JSON(w, status, map[string]any{
 		"version":  c.Version,
 		"services": services,
 	})

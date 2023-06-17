@@ -1,4 +1,4 @@
-package finder
+package reads
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
 
 	recipeCollection := mongoDB.Collection("recipes")
 
-	finder := NewRecipeFinder(recipeCollection)
+	finder := NewRecipesSearcher(recipeCollection)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -37,7 +37,7 @@ func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
 
 		b.StartTimer()
 
-		finder.FindRecipe(context.TODO(), &model.RecipeFilter{
+		finder.FindRecipes(context.TODO(), &model.RecipeFilter{
 			Pagination:  pagination.New("0", "20"),
 			Ingredients: ingredients,
 		})

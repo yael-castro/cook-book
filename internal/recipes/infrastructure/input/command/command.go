@@ -5,19 +5,18 @@ import (
 	"flag"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/port"
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
-	"log"
 )
 
 // NewRecipeListGenerator builds an instance of the unique implementation for the RecipeListGenerator interface
-func NewRecipeListGenerator(generator port.RecipeSetGenerator) cli.Commander {
+func NewRecipeListGenerator(generator port.RecipesGenerator) cli.Commander {
 	return &recipeListGenerator{
-		RecipeSetGenerator: generator,
+		recipeSetGenerator: generator,
 	}
 }
 
 type recipeListGenerator struct {
 	flags              *flag.FlagSet
-	RecipeSetGenerator port.RecipeSetGenerator
+	recipeSetGenerator port.RecipesGenerator
 }
 
 // Command generates a recipe list based on the flags ingredients and recipes
@@ -29,11 +28,10 @@ func (r *recipeListGenerator) Command(ctx context.Context, args ...string) error
 
 	err := r.flags.Parse(args[1:])
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
-	return r.RecipeSetGenerator.GenerateRecipeSet(ctx, uint32(*recipes), uint32(*ingredients))
+	return r.recipeSetGenerator.GenerateRecipes(ctx, uint32(*recipes), uint32(*ingredients))
 }
 
 // Help shows the instructions to use the Command

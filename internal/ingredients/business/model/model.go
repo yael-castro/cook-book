@@ -11,7 +11,8 @@ type Ingredient struct {
 }
 
 func (i Ingredient) IsValid() (bool, error) {
-	return false, nil
+	// TODO implement me!
+	return true, nil
 }
 
 type NutritionalInformation struct {

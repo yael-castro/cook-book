@@ -4,7 +4,6 @@ package server
 import (
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server/response"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -26,8 +25,6 @@ func New(config Config) http.Handler {
 			}
 		}
 	}
-
-	log.Printf("\n%s\n", s)
 
 	return s
 }

@@ -1,4 +1,4 @@
-package finder
+package reads
 
 import (
 	"context"
@@ -11,32 +11,37 @@ import (
 	"log"
 )
 
-// NewRecipeFinder builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB storage
-func NewRecipeFinder(collection *mongo.Collection) port.RecipeFinder {
-	return &recipeFinder{
+// NewRecipesSearcher builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB writes
+func NewRecipesSearcher(collection *mongo.Collection) port.RecipesSearcher {
+	if collection == nil {
+		panic("missing MongoDB collection")
+	}
+
+	return &recipesSearcher{
 		RecipeCollection: collection,
+		logger:           log.Default(),
 	}
 }
 
-type recipeFinder struct {
+type recipesSearcher struct {
 	RecipeCollection *mongo.Collection
+	logger           *log.Logger
 }
 
-func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter) (slice []*model.Recipe, err error) {
-	log.Printf("RECIPE FILTER: %+v\n", filter)
+func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *model.RecipeFilter) (slice []*model.Recipe, err error) {
+	s.logger.Printf("RECIPE FILTER: %+v\n", filter)
 
+	// Establishing the limit of results and skip documents
 	sorted := options.Find().SetSort(bson.D{
 		{Key: "_id", Value: 1},
 	})
-
-	log.Printf("START %d LIMIT %d\n", filter.Start(), filter.Limit())
 
 	opts := []*options.FindOptions{
 		sorted.SetSkip(int64(filter.Start())),
 		sorted.SetLimit(int64(filter.Limit())),
 	}
 
-	// Transforms the
+	// Encoding ingredient IDs
 	ingredients := make([]bson.D, 0, len(filter.Ingredients))
 
 	for ingredient := range filter.Ingredients {
@@ -48,8 +53,7 @@ func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter
 		})
 	}
 
-	log.Printf("INGREDIENTS: %+v", ingredients)
-
+	// Building the MongoDB query
 	query := bson.D{
 		{
 			Key: "ingredients",
@@ -62,8 +66,10 @@ func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter
 		},
 	}
 
+	// Counting documents
 	totalResults, err := s.RecipeCollection.CountDocuments(ctx, query)
 	if err != nil {
+		s.logger.Println(err)
 		return
 	}
 
@@ -75,6 +81,7 @@ func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter
 
 	cursor, err := s.RecipeCollection.Find(ctx, query, opts...)
 	if err != nil {
+		s.logger.Println(err)
 		return nil, err
 	}
 
@@ -84,6 +91,7 @@ func (s recipeFinder) FindRecipe(ctx context.Context, filter *model.RecipeFilter
 
 		err = cursor.Decode(recipe)
 		if err != nil {
+			s.logger.Println(err)
 			return
 		}
 
