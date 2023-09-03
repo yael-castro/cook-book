@@ -3,10 +3,9 @@ package container
 import (
 	"fmt"
 	"github.com/rs/cors"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/reads"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/writes"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server"
 	"net/http"
@@ -41,21 +40,21 @@ func (c container) Inject(a any) error {
 	recipesCollection := db.Collection("recipes")
 
 	// Secondary adapters
-	recipeFinder := reads.NewRecipesSearcher(recipesCollection)
-	recipeCreator := writes.NewRecipeCreator(recipesCollection)
+	recipeFinder := output.NewRecipesSearcher(recipesCollection)
+	recipeCreator := output.NewRecipeCreator(recipesCollection)
 
 	// Ports for primary adapters
-	recipeSearcher := logic.NewRecipesFinder(recipeFinder)
-	recipeAdder := logic.NewRecipeAdder(recipeCreator)
+	recipeSearcher := business.NewRecipesFinder(recipeFinder)
+	recipeAdder := business.NewRecipeAdder(recipeCreator)
 
 	// Primary adapters
-	searcher := handler.NewRecipesFinder(recipeSearcher, handler.ErrorHandler())
-	creator := handler.NewRecipesCreator(recipeAdder, handler.ErrorHandler())
+	searcher := input.NewRecipesFinder(recipeSearcher, input.ErrorHandler())
+	creator := input.NewRecipesCreator(recipeAdder, input.ErrorHandler())
 
 	// Builds HTTP server
 	*h = server.New(server.Config{
 		RouteMaps: []server.RouteMap{
-			handler.RouteMap(creator, searcher),
+			input.RouteMap(creator, searcher),
 		},
 	})
 

@@ -1,4 +1,4 @@
-package mass
+package business
 
 const (
 	G   Mass = 1

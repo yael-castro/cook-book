@@ -1,14 +1,14 @@
-package command
+package input
 
 import (
 	"context"
 	"flag"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/port"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
 )
 
 // NewRecipeListGenerator builds an instance of the unique implementation for the RecipeListGenerator interface
-func NewRecipeListGenerator(generator port.RecipesGenerator) cli.Commander {
+func NewRecipeListGenerator(generator business.RecipesGenerator) cli.Commander {
 	return &recipeListGenerator{
 		recipeSetGenerator: generator,
 	}
@@ -16,7 +16,7 @@ func NewRecipeListGenerator(generator port.RecipesGenerator) cli.Commander {
 
 type recipeListGenerator struct {
 	flags              *flag.FlagSet
-	recipeSetGenerator port.RecipesGenerator
+	recipeSetGenerator business.RecipesGenerator
 }
 
 // Command generates a recipe list based on the flags ingredients and recipes

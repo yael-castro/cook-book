@@ -1,4 +1,4 @@
-package consts
+package business
 
 import (
 	"github.com/yael-castro/cb-search-engine-api/pkg/errors/code"
@@ -13,4 +13,9 @@ const (
 	MissingIngredientIdentifiers
 	// InvalidIngredientID indicates that the ingredient id not valid
 	InvalidIngredientID
+)
+
+const (
+	minIngredientNumber = 1
+	maxIngredientNumber = 30
 )

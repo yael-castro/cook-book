@@ -4,12 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/logic"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/command"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/maker"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/writes"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
+	"go.mongodb.org/mongo-driver/mongo"
 	"os"
 )
 
@@ -48,17 +48,19 @@ func (c container) Inject(a any) error {
 		mongoDB = defaultMongoDB
 	}
 
-	db, err := connection.NewMongoDatabase(mongoDSN, mongoDB)
-	if err != nil {
-		return errors.New("failed connection: failed connection to external writes")
+	recipeCollectionFunc := func() (*mongo.Collection, error) {
+		db, err := connection.NewMongoDatabase(mongoDSN, mongoDB)
+		if err != nil {
+			return nil, errors.New("failed connection: failed connection to external writes")
+		}
+
+		return db.Collection("recipes"), nil
 	}
 
-	recipeCollection := db.Collection("recipes")
-
-	recipesGenerator := maker.NewRecipesMaker()
-	recipeStore := writes.NewRecipeCreator(recipeCollection)
-	recipeSetGenerator := logic.NewRecipeSetGenerator(recipesGenerator, recipeStore)
-	recipeListGenerator := command.NewRecipeListGenerator(recipeSetGenerator)
+	recipesMaker := output.NewRecipesMaker()
+	recipeCreator := output.NewRecipeCreatorForCLI(recipeCollectionFunc)
+	recipeSetGenerator := business.NewRecipeGenerator(recipesMaker, recipeCreator)
+	recipeListGenerator := input.NewRecipeListGenerator(recipeSetGenerator)
 
 	config := cli.Configuration{
 		Version:     GitCommit,

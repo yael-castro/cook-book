@@ -1,7 +1,7 @@
-package handler
+package input
 
 import (
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/model/consts"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"github.com/yael-castro/cb-search-engine-api/pkg/errors/code"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server"
 	"net/http"
@@ -9,13 +9,13 @@ import (
 
 func ErrorHandler() server.ErrorHandler {
 	return server.NewErrorHandler(server.ErrorHandlerConfig{
-		Prefix: "RCPS",
+		Prefix: "rCpS",
 		Codes: map[int][]code.Code{
 			http.StatusBadRequest: {
-				consts.InvalidMin,
-				consts.InvalidMax,
-				consts.InvalidIngredientID,
-				consts.MissingIngredientIdentifiers,
+				business.InvalidMin,
+				business.InvalidMax,
+				business.InvalidIngredientID,
+				business.MissingIngredientIdentifiers,
 			},
 		},
 		Logger: nil,

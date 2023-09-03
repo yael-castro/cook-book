@@ -1,4 +1,4 @@
-package reads
+package output
 
 import (
 	"context"

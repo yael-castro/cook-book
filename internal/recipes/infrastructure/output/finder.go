@@ -1,10 +1,8 @@
-package reads
+package output
 
 import (
 	"context"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/model"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business/port"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output/dto"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -12,7 +10,7 @@ import (
 )
 
 // NewRecipesSearcher builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB writes
-func NewRecipesSearcher(collection *mongo.Collection) port.RecipesSearcher {
+func NewRecipesSearcher(collection *mongo.Collection) business.RecipesSearcher {
 	if collection == nil {
 		panic("missing MongoDB collection")
 	}
@@ -28,7 +26,7 @@ type recipesSearcher struct {
 	logger           *log.Logger
 }
 
-func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *model.RecipeFilter) (slice []*model.Recipe, err error) {
+func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *business.RecipeFilter) (slice []*business.Recipe, err error) {
 	s.logger.Printf("RECIPE FILTER: %+v\n", filter)
 
 	// Establishing the limit of results and skip documents
@@ -87,7 +85,7 @@ func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *model.Recipe
 
 	// NOTE: avoid the method cursor.All() because it uses reflection to iterate the cursor values
 	for cursor.Next(ctx) {
-		recipe := &dto.Recipe{}
+		recipe := &Recipe{}
 
 		err = cursor.Decode(recipe)
 		if err != nil {
@@ -95,7 +93,7 @@ func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *model.Recipe
 			return
 		}
 
-		slice = append(slice, dto.ToModelRecipe(recipe))
+		slice = append(slice, BusinessRecipe(recipe))
 	}
 
 	return

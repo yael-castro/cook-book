@@ -96,7 +96,7 @@ func (e *errorHandler) ConvertError(err error) (int, *response.Common) {
 	}
 }
 
-func (e *errorHandler) HandleError(w http.ResponseWriter, r *http.Request, err error) {
+func (e *errorHandler) HandleError(w http.ResponseWriter, _ *http.Request, err error) {
 	log.Println("ERROR", err)
 	status, common := e.ConvertError(err)
 	_ = JSON(w, status, common)

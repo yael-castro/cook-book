@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Cook Book
-  description: API to manage recipes and ingredients in order to search recipes by ingredients.
+  description: API to manage recipes and ingredients input order to search recipes by ingredients.
   contact:
     email: contacto@yael.mx
   version: 1.0.0
