@@ -18,9 +18,8 @@ type Set[T comparable] map[T]struct{}
 // Put inserts a new item input the Set
 //
 // Complexity: O(1)
-func (s *Set[T]) Put(item T) error {
+func (s *Set[T]) Put(item T) {
 	(*s)[item] = struct{}{}
-	return nil
 }
 
 // Has returns a bool that indicates if the item already exists input the Set
@@ -43,10 +42,12 @@ func (s *Set[T]) Remove(item T) {
 // Complexity: O(n)
 //
 // n - is the Set length
-func (s *Set[T]) Slice() (slice []T) {
+func (s *Set[T]) Slice() []T {
+	slice := make([]T, 0, len(*s))
+
 	for k := range *s {
 		slice = append(slice, k)
 	}
 
-	return
+	return slice
 }

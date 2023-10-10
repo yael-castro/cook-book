@@ -2,28 +2,24 @@ package output
 
 import (
 	"context"
-	"github.com/yael-castro/cb-search-engine-api/internal/searches/business/model"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"github.com/yael-castro/cb-search-engine-api/pkg/pagination"
 	"github.com/yael-castro/cb-search-engine-api/pkg/set"
 	"math/rand"
+	"os"
 	"testing"
 )
 
-const (
-	defaultDSN = "mongodb://localhost:27017"
-	defaultDB  = "test"
-)
-
 func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
-	mongoDB, err := connection.NewMongoDatabase(defaultDSN, defaultDB)
+	mongoDB, err := connection.NewMongoDatabase(os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB"))
 	if err != nil {
 		b.Fatal(err)
 	}
 
 	recipeCollection := mongoDB.Collection("recipes")
 
-	finder := NewRecipesSearcher(recipeCollection)
+	searcher := NewRecipesSearcher(recipeCollection)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -37,9 +33,12 @@ func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
 
 		b.StartTimer()
 
-		finder.FindRecipes(context.TODO(), &model.RecipeFilter{
+		_, err = searcher.SearchRecipes(context.TODO(), &business.RecipeFilter{
 			Pagination:  pagination.New("0", "20"),
 			Ingredients: ingredients,
 		})
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }

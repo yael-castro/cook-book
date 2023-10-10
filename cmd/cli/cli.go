@@ -27,7 +27,7 @@ func main() {
 	// DI container input action!
 	var c cli.CLI
 
-	err := container.New().Inject(&c)
+	err := container.Inject(&c)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,6 +35,6 @@ func main() {
 	// Runs the CLI
 	err = c.Execute(ctx)
 	if err != nil {
-		log.Println("ERROR |", err)
+		log.Fatal("ERROR |", err)
 	}
 }

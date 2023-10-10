@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/rs/cors"
 	"github.com/yael-castro/cb-search-engine-api/cmd/server/container"
 	"log"
 	"net/http"
@@ -34,7 +35,7 @@ func main() {
 	// DI container input action!
 	var h http.Handler
 
-	err := container.New().Inject(&h)
+	err := container.Inject(&h)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +43,7 @@ func main() {
 	// Builds the server
 	server := http.Server{
 		Addr:    ":" + port,
-		Handler: h,
+		Handler: cors.Default().Handler(h),
 	}
 
 	go func() {
@@ -51,6 +52,7 @@ func main() {
 	}()
 
 	// Runs the server
+	log.Printf("%v\n", h)
 	log.Printf("Server version '%s' is running on port '%s'\n", container.GitCommit, port)
 	log.Println(server.ListenAndServe())
 }

@@ -5,20 +5,16 @@ import (
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server/response"
 	"net/http"
-	"strings"
 )
 
+// RouteMap defines the ways that http requests can follow depending on the path and method
 type RouteMap map[string]map[string]http.Handler
 
-type Config struct {
-	RouteMaps []RouteMap
-}
-
-// New builds a http api that complies the Server interface based on the Router received
-func New(config Config) http.Handler {
+// New builds an instance of http.Handler based on the instances of RouteMap which defines how the requests should be managed
+func New(routeMaps ...RouteMap) http.Handler {
 	s := &server{}
 
-	for _, routeMap := range config.RouteMaps {
+	for _, routeMap := range routeMaps {
 		for route, routes := range routeMap {
 			for method, handler := range routes {
 				s.setRoute(method, route, handler)
@@ -32,7 +28,7 @@ func New(config Config) http.Handler {
 type server map[string]map[string]http.Handler
 
 func (s *server) setRoute(method string, path string, handler http.Handler) {
-	for strings.HasSuffix(path, "/") {
+	for path[len(path)-1] == '/' {
 		path = path[:len(path)-1]
 	}
 
@@ -43,8 +39,9 @@ func (s *server) setRoute(method string, path string, handler http.Handler) {
 	(*s)[path][method] = handler
 }
 
+// ServeHTTP handles a http request and handle it depending on the request path and method
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
+	path := r.URL.Path // TODO: evaluate if the pool pattern is required
 
 	if path[len(path)-1] == '/' {
 		path = path[:len(path)-1]
@@ -69,6 +66,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	(*s)[path][r.Method].ServeHTTP(w, r)
 }
 
+// String builds and returns a representative for the server instance
 func (s *server) String() string {
 	str := ""
 

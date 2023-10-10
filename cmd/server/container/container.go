@@ -2,33 +2,25 @@ package container
 
 import (
 	"fmt"
-	"github.com/rs/cors"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"github.com/yael-castro/cb-search-engine-api/pkg/server"
+	"log"
 	"net/http"
 	"os"
 )
 
 var GitCommit = ""
 
-type Container interface {
-	Inject(any) error
-}
-
-func New() Container {
-	return container{}
-}
-
-type container struct{}
-
-func (c container) Inject(a any) error {
+func Inject(a any) error {
 	h, ok := a.(*http.Handler)
 	if !ok {
 		return fmt.Errorf("type \"%T\" is not supported", a)
 	}
+
+	logger := log.Default()
 
 	// Establishes connection to MongoDB
 	db, err := connection.NewMongoDatabase(os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB"))
@@ -41,7 +33,7 @@ func (c container) Inject(a any) error {
 
 	// Secondary adapters
 	recipeFinder := output.NewRecipesSearcher(recipesCollection)
-	recipeCreator := output.NewRecipeCreator(recipesCollection)
+	recipeCreator := output.NewRecipeCreator(db, logger)
 
 	// Ports for primary adapters
 	recipeSearcher := business.NewRecipesFinder(recipeFinder)
@@ -52,12 +44,6 @@ func (c container) Inject(a any) error {
 	creator := input.NewRecipesCreator(recipeAdder, input.ErrorHandler())
 
 	// Builds HTTP server
-	*h = server.New(server.Config{
-		RouteMaps: []server.RouteMap{
-			input.RouteMap(creator, searcher),
-		},
-	})
-
-	*h = cors.Default().Handler(*h)
+	*h = server.New(input.RouteMap(creator, searcher))
 	return err
 }

@@ -1,7 +1,6 @@
 package container
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
@@ -10,11 +9,12 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
 	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 	"os"
 )
 
 var (
-	GitCommit = ""
+	gitCommit = ""
 	mongoDB   = ""
 	mongoDSN  = ""
 )
@@ -24,17 +24,7 @@ const (
 	defaultMongoDSN = "mongodb://localhost:27017"
 )
 
-type Container interface {
-	Inject(any) error
-}
-
-func New() Container {
-	return container{}
-}
-
-type container struct{}
-
-func (c container) Inject(a any) error {
+func Inject(a any) error {
 	cl, ok := a.(*cli.CLI)
 	if !ok {
 		return fmt.Errorf("type \"%T\" is not supported", a)
@@ -48,22 +38,25 @@ func (c container) Inject(a any) error {
 		mongoDB = defaultMongoDB
 	}
 
-	recipeCollectionFunc := func() (*mongo.Collection, error) {
-		db, err := connection.NewMongoDatabase(mongoDSN, mongoDB)
-		if err != nil {
-			return nil, errors.New("failed connection: failed connection to external writes")
-		}
+	// Dependencies
+	logger := log.Default()
 
-		return db.Collection("recipes"), nil
+	databaseFunc := func() (*mongo.Database, error) {
+		return connection.NewMongoDatabase(mongoDSN, mongoDB)
 	}
 
+	// Driven adapters
 	recipesMaker := output.NewRecipesMaker()
-	recipeCreator := output.NewRecipeCreatorForCLI(recipeCollectionFunc)
+	recipeCreator := output.NewRecipeCreatorFunc(databaseFunc, logger)
+
+	// Ports for driving adapters
 	recipeSetGenerator := business.NewRecipeGenerator(recipesMaker, recipeCreator)
+
+	// Driving adapters
 	recipeListGenerator := input.NewRecipeListGenerator(recipeSetGenerator)
 
 	config := cli.Configuration{
-		Version:     GitCommit,
+		Version:     gitCommit,
 		Description: "is a tool for managing the recipes writes and can test the search engine.",
 		Commanders: map[string]cli.Commander{
 			"generate": recipeListGenerator,
