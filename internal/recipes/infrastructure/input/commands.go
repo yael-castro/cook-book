@@ -3,26 +3,35 @@ package input
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
+	"github.com/yael-castro/cb-search-engine-api/pkg/command"
 )
 
-// NewRecipeListGenerator builds an instance of the unique implementation for the RecipeListGenerator interface
-func NewRecipeListGenerator(generator business.RecipesGenerator) cli.Commander {
-	return &recipeListGenerator{
-		recipeSetGenerator: generator,
+// CommandGenerateRecipes builds an instance of the unique implementation for the RecipeListGenerator interface
+func CommandGenerateRecipes(generator business.RecipesGenerator) command.Command {
+	const commandName = "generate"
+
+	return recipeListGenerator{
+		flags:            flag.NewFlagSet(commandName, flag.ContinueOnError),
+		recipesGenerator: generator,
 	}
 }
 
 type recipeListGenerator struct {
-	flags              *flag.FlagSet
-	recipeSetGenerator business.RecipesGenerator
+	flags            *flag.FlagSet
+	recipesGenerator business.RecipesGenerator
 }
 
-// Command generates a recipe list based on the flags ingredients and recipes
-func (r *recipeListGenerator) Command(ctx context.Context, args ...string) error {
-	r.flags = flag.NewFlagSet(args[0], flag.ContinueOnError)
+func (r recipeListGenerator) Name() string {
+	return r.flags.Name()
+}
 
+func (r recipeListGenerator) Description() string {
+	return "generates a set of random recipes"
+}
+
+func (r recipeListGenerator) Execute(ctx context.Context, args ...string) error {
 	ingredients := r.flags.Uint64("ingredients", 0, "indicates the number of the ingredients for recipe")
 	recipes := r.flags.Uint64("recipes", 0, "indicates the number of the recipes that will generated")
 
@@ -31,10 +40,12 @@ func (r *recipeListGenerator) Command(ctx context.Context, args ...string) error
 		return err
 	}
 
-	return r.recipeSetGenerator.GenerateRecipes(ctx, uint32(*recipes), uint32(*ingredients))
-}
+	fmt.Println("Generating recipes...")
 
-// Help shows the instructions to use the Command
-func (r *recipeListGenerator) Help() {
-	cli.Usage(r.flags)
+	if err := r.recipesGenerator.GenerateRecipes(ctx, uint32(*recipes), uint32(*ingredients)); err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully!")
+	return nil
 }

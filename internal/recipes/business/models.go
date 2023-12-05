@@ -1,36 +1,50 @@
 package business
 
 import (
-	"errors"
+	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
-	"github.com/yael-castro/cb-search-engine-api/pkg/pagination"
 	"github.com/yael-castro/cb-search-engine-api/pkg/set"
+	"strconv"
 )
 
 // RecipeFilter filter for paginated recipe searches
 type RecipeFilter struct {
-	*pagination.Pagination
-	// Ingredients are the ingredients used to perform a recipe search
+	Page, Size, Total uint64
+	// Ingredients are the ingredient IDs used to perform a recipe search
 	Ingredients set.Set[int64]
 }
 
-// Recipe kitchen recipe data
+func (r RecipeFilter) Validate() error {
+	switch {
+	case r.Size < 1 || r.Size > 25:
+		return ErrInvalidPageSize
+	case r.Ingredients.Len() == 0:
+		return fmt.Errorf("%w: missing ingredients to perform a recipe search", ErrInvalidIngredients)
+	}
+
+	for ingredientID := range r.Ingredients {
+		if ingredientID <= 0 {
+			return fmt.Errorf("%w: invalid ingredient id", ErrInvalidIngredients)
+		}
+	}
+
+	return nil
+}
+
 type Recipe struct {
 	ID                int64
 	Name, Description string
-	Ingredients       []*Ingredient
+	Ingredients       []Ingredient
 }
 
 func (r *Recipe) Validate() (err error) {
 	if r == nil {
-		return errors.New("missing recipe data")
+		return fmt.Errorf("%w: missing recipe data", ErrInvalidRecipe)
 	}
 
 	switch {
-	case r.Name == "":
-		return errors.New("missing recipe name")
-	case r.Description == "":
-		return errors.New("missing recipe description")
+	case len(r.Name) == 0:
+		return fmt.Errorf("%w: missing recipe name", ErrInvalidRecipe)
 	}
 
 	for _, ingredient := range r.Ingredients {
@@ -42,8 +56,25 @@ func (r *Recipe) Validate() (err error) {
 	return
 }
 
-// Ingredient alias for model.Ingredient
-type Ingredient = business.Ingredient
+// Supported values for RecipeError
+const (
+	_ RecipeError = iota
+	ErrInvalidRecipe
+	ErrInvalidPageSize
+	ErrInvalidIngredients
+	ErrInvalidIngredientID
+)
 
-// NutritionalInformation alias for model.NutritionalInformation
-type NutritionalInformation = business.NutritionalInformation
+// RecipeError defines an error related to a recipe error
+type RecipeError uint8
+
+// Error returns the string value of RecipeError
+func (r RecipeError) Error() string {
+	return "recipes:" + strconv.FormatUint(uint64(r), 10)
+}
+
+// Aliases
+type (
+	Ingredient             = business.Ingredient
+	NutritionalInformation = business.NutritionalInformation
+)

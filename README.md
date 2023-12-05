@@ -46,10 +46,10 @@ This project implements architecture pattern [ports and adapters](https://alista
 ```
 .
 ├── cmd
-│   └── {application}
+│   └── {command}
 │       └── container (di container)
 ├── internal
-│   └── {topic}
+│   └── {feature}
 │       ├── business
 │       └── infrastructure
 │           ├── input  (everything related to "driving" adapters)

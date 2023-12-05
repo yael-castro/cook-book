@@ -4,21 +4,22 @@ import (
 	"errors"
 )
 
+const (
+	G   Mass = 1
+	DAG      = G * 10
+	HG       = DAG * 10
+	KG       = HG * 10
+)
+
+type Mass int64
+
 type Ingredient struct {
-	*NutritionalInformation
+	NutritionalInformation
 	ID                int64
 	Name, Description string
 }
 
-func (i *Ingredient) Validate() error {
-	if i == nil {
-		return errors.New("missing ingredient data")
-	}
-
-	if err := i.NutritionalInformation.Validate(); err != nil {
-		return err
-	}
-
+func (i Ingredient) Validate() error {
 	switch {
 	case i.ID < 1:
 		return errors.New("missing ingredient id")
@@ -28,7 +29,7 @@ func (i *Ingredient) Validate() error {
 		return errors.New("missing ingredient description")
 	}
 
-	return nil
+	return i.NutritionalInformation.Validate()
 }
 
 type NutritionalInformation struct {
@@ -36,10 +37,6 @@ type NutritionalInformation struct {
 	Fats, Proteins, Carbs, Fiber Mass
 }
 
-func (i *NutritionalInformation) Validate() error {
-	if i == nil {
-		return errors.New("missing nutritional information")
-	}
-
+func (i NutritionalInformation) Validate() error {
 	return nil
 }
