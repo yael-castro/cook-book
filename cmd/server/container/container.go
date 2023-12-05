@@ -1,49 +1,91 @@
 package container
 
 import (
+	"context"
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
-	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
-	"github.com/yael-castro/cb-search-engine-api/pkg/server"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
-	"net/http"
 	"os"
 )
 
 var GitCommit = ""
 
-func Inject(a any) error {
-	h, ok := a.(*http.Handler)
-	if !ok {
-		return fmt.Errorf("type \"%T\" is not supported", a)
+func Inject(ctx context.Context, a any) error {
+	switch a := a.(type) {
+	case *echo.Echo:
+		return injectHandler(ctx, a)
+	case *mongo.Database:
+		return injectMongoDatabase(ctx, a)
+	}
+
+	return fmt.Errorf("type \"%T\" is not supported", a)
+}
+
+func injectHandler(ctx context.Context, e *echo.Echo) (err error) {
+	// External dependencies
+	var db mongo.Database
+
+	if err = Inject(ctx, &db); err != nil {
+		return
 	}
 
 	logger := log.Default()
-
-	// Establishes connection to MongoDB
-	db, err := connection.NewMongoDatabase(os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB"))
-	if err != nil {
-		return err
-	}
 
 	// MongoDB collections
 	recipesCollection := db.Collection("recipes")
 
 	// Secondary adapters
-	recipeFinder := output.NewRecipesSearcher(recipesCollection)
-	recipeCreator := output.NewRecipeCreator(db, logger)
+	recipeFinder := output.NewRecipesFinder(recipesCollection)
+	recipeSaver := output.NewRecipesSaver(&db, logger)
 
 	// Ports for primary adapters
-	recipeSearcher := business.NewRecipesFinder(recipeFinder)
-	recipeAdder := business.NewRecipeAdder(recipeCreator)
+	recipeSearcher := business.NewRecipesSearcher(recipeFinder)
+	recipeCreator := business.NewRecipeCreator(recipeSaver)
 
 	// Primary adapters
-	searcher := input.NewRecipesFinder(recipeSearcher, input.ErrorHandler())
-	creator := input.NewRecipesCreator(recipeAdder, input.ErrorHandler())
+
+	// Setting http error handler
+	e.HTTPErrorHandler = input.ErrorHandler(e.HTTPErrorHandler)
 
 	// Builds HTTP server
-	*h = server.New(input.RouteMap(creator, searcher))
-	return err
+	e.POST(
+		"/v1/recipes",
+		input.PostRecipes(recipeCreator),
+	)
+
+	e.GET(
+		"/v1/recipes",
+		input.GetRecipes(recipeSearcher),
+	)
+
+	return
+}
+
+func injectMongoDatabase(ctx context.Context, database *mongo.Database) (err error) {
+	dsn, dbName := os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB")
+
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(dsn))
+	if err != nil {
+		return
+	}
+
+	err = mongoClient.Ping(ctx, readpref.Primary())
+	if err != nil {
+		return
+	}
+
+	*database = *mongoClient.Database(dbName)
+
+	err = database.Client().Ping(ctx, readpref.Primary())
+	if err != nil {
+		return
+	}
+
+	return
 }

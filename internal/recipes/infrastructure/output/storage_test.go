@@ -1,12 +1,14 @@
-package output
+package output_test
 
 import (
 	"context"
 	"errors"
+	"github.com/yael-castro/cb-search-engine-api/cmd/server/container"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/pkg/connection"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
+	"go.mongodb.org/mongo-driver/mongo"
+	"io"
 	"log"
-	"os"
 	"strconv"
 	"testing"
 )
@@ -22,7 +24,7 @@ func TestRecipesCreator_CreateRecipes(t *testing.T) {
 					ID:          1_022,
 					Name:        "Recipe",
 					Description: "<Insert ingredient description>",
-					Ingredients: []*business.Ingredient{
+					Ingredients: []business.Ingredient{
 						{
 							ID:          1,
 							Name:        "Ingredient",
@@ -34,16 +36,20 @@ func TestRecipesCreator_CreateRecipes(t *testing.T) {
 		},
 	}
 
-	database, err := connection.NewMongoDatabase(os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB"))
-	if err != nil {
+	ctx := context.TODO()
+	log.SetOutput(io.Discard)
+
+	var mongoDB mongo.Database
+
+	if err := container.Inject(ctx, &mongoDB); err != nil {
 		t.Fatal(err)
 	}
 
-	creator := NewRecipeCreator(database, log.Default())
+	saver := output.NewRecipesSaver(&mongoDB, log.Default())
 
 	for i, v := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			err := creator.CreateRecipes(context.TODO(), v.recipes...)
+			err := saver.SaveRecipes(ctx, v.recipes...)
 			if !errors.Is(err, v.expectedErr) {
 				t.Fatalf("expected error '%v' got '%v'", v.expectedErr, err)
 			}

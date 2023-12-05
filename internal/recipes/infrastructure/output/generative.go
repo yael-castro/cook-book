@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-func NewRecipesMaker() business.RecipesMaker {
-	return recipesMaker{}
+func NewRecipesWriter() business.RecipesWriter {
+	return recipesWriter{}
 }
 
-type recipesMaker struct{}
+type recipesWriter struct{}
 
-func (r recipesMaker) MakeRecipes(recipesNumber, ingredientsNumber uint32) ([]*business.Recipe, error) {
+func (r recipesWriter) WriteRecipes(recipesNumber, ingredientsNumber uint32) ([]*business.Recipe, error) {
 	recipes := make([]*business.Recipe, 0, recipesNumber)
 
 	for recipesNumber > 0 {
@@ -32,20 +32,20 @@ func (r recipesMaker) MakeRecipes(recipesNumber, ingredientsNumber uint32) ([]*b
 	return recipes, nil
 }
 
-func (recipesMaker) generateIngredients(length uint32) []*business.Ingredient {
-	ingredients := make([]*business.Ingredient, 0, length)
+func (recipesWriter) generateIngredients(length uint32) []business.Ingredient {
+	ingredients := make([]business.Ingredient, 0, length)
 
 	for length > 0 {
 		id := rand.Int63()
 
-		ingredients = append(ingredients, &business.Ingredient{
+		ingredients = append(ingredients, business.Ingredient{
 			ID:   id,
 			Name: fmt.Sprintf("INGREDIENT #%d", id),
-			NutritionalInformation: &business.NutritionalInformation{
-				Calories: 1_000,
+			NutritionalInformation: business.NutritionalInformation{
 				Fats:     1_000,
 				Carbs:    1_000,
 				Fiber:    1_000,
+				Calories: 1_000,
 				Proteins: 1_000,
 			},
 		})

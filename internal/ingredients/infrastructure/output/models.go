@@ -4,18 +4,18 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
 )
 
-func BusinessIngredient(ingredient *Ingredient) *business.Ingredient {
-	return &business.Ingredient{
-		NutritionalInformation: (*business.NutritionalInformation)(ingredient.NutritionalInformation),
+func BusinessIngredient(ingredient Ingredient) business.Ingredient {
+	return business.Ingredient{
+		NutritionalInformation: (business.NutritionalInformation)(ingredient.NutritionalInformation),
 		ID:                     ingredient.ID,
 		Name:                   ingredient.Name,
 		Description:            ingredient.Description,
 	}
 }
 
-func NewIngredient(ingredient *business.Ingredient) *Ingredient {
-	return &Ingredient{
-		NutritionalInformation: (*NutritionalInformation)(ingredient.NutritionalInformation),
+func NewIngredient(ingredient business.Ingredient) Ingredient {
+	return Ingredient{
+		NutritionalInformation: (NutritionalInformation)(ingredient.NutritionalInformation),
 		ID:                     ingredient.ID,
 		Name:                   ingredient.Name,
 		Description:            ingredient.Description,
@@ -23,14 +23,15 @@ func NewIngredient(ingredient *business.Ingredient) *Ingredient {
 }
 
 type Ingredient struct {
-	*NutritionalInformation `bson:"nutritional_information,omitempty"`
-	ID                      int64  `bson:"_id"`
-	Name                    string `bson:",omitempty"`
-	Description             string `bson:",omitempty"`
+	NutritionalInformation `bson:"nutritional_information,omitempty"`
+	ID                     int64  `bson:"_id"`
+	Name                   string `bson:",omitempty"`
+	Description            string `bson:",omitempty"`
 }
 
-func (i Ingredient) IsValid() (bool, error) {
-	return false, nil
+func (i Ingredient) Validate() error {
+	// TODO: validate ingredient data
+	return nil
 }
 
 type NutritionalInformation struct {

@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Cook Book
-  description: API to manage recipes and ingredients input order to search recipes by ingredients.
+  description: REST API to manage recipes and ingredients input order to search recipes by ingredients.
   contact:
     email: contacto@yael.mx
   version: 1.0.0
@@ -10,14 +10,14 @@ servers:
 - url: http://localhost:8080
 tags:
 - name: recipes
-  description: everything about your kitchen recipes
+  description: Everything about your kitchen recipes
 paths:
   /v1/recipes:
     get:
       tags:
       - recipes
       operationId: searchRecipes
-      summary: searches recipes based on ingredient IDs
+      summary: Searches recipes based on ingredient IDs
       parameters: 
         - in: query
           name: ingredients

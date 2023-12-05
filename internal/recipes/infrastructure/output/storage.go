@@ -9,14 +9,24 @@ import (
 	"log"
 )
 
-// NewRecipeCreator builds an adapter for the port.RecipesCreator
-func NewRecipeCreator(database *mongo.Database, logger *log.Logger) business.RecipesCreator {
+func NewRecipeSaverFunc(databaseFunc func() (*mongo.Database, error), logger *log.Logger) business.RecipesSaverFunc {
+	return func(ctx context.Context, recipes ...*business.Recipe) error {
+		database, err := databaseFunc()
+		if err != nil {
+			return err
+		}
+
+		return NewRecipesSaver(database, logger).SaveRecipes(ctx, recipes...)
+	}
+}
+
+func NewRecipesSaver(database *mongo.Database, logger *log.Logger) business.RecipesSaver {
 	switch any(nil) {
 	case logger, database:
 		panic("missing settings")
 	}
 
-	return &recipesCreator{
+	return recipesSaver{
 		logger:                logger,
 		client:                database.Client(),
 		recipesCollection:     database.Collection("recipes"),
@@ -24,7 +34,7 @@ func NewRecipeCreator(database *mongo.Database, logger *log.Logger) business.Rec
 	}
 }
 
-type recipesCreator struct {
+type recipesSaver struct {
 	false                 bool
 	logger                *log.Logger
 	client                *mongo.Client
@@ -32,7 +42,7 @@ type recipesCreator struct {
 	ingredientsCollection *mongo.Collection
 }
 
-func (r recipesCreator) CreateRecipes(ctx context.Context, recipes ...*business.Recipe) error {
+func (r recipesSaver) SaveRecipes(ctx context.Context, recipes ...*business.Recipe) error {
 	recipeDocuments := make([]any, 0, len(recipes))
 	ingredientDocuments := make([]any, 0, len(recipes))
 
@@ -40,6 +50,7 @@ func (r recipesCreator) CreateRecipes(ctx context.Context, recipes ...*business.
 		recipeDocuments = append(recipeDocuments, NewRecipe(recipe))
 
 		for _, ingredient := range recipe.Ingredients {
+			// TODO: set ingredient IDs
 			ingredientDocuments = append(ingredientDocuments, ingredients.NewIngredient(ingredient))
 		}
 	}
@@ -66,17 +77,4 @@ func (r recipesCreator) CreateRecipes(ctx context.Context, recipes ...*business.
 
 	_, err = session.WithTransaction(ctx, transaction)
 	return err
-}
-
-func NewRecipeCreatorFunc(databaseFunc func() (*mongo.Database, error), logger *log.Logger) business.RecipesCreatorFunc {
-	return func(ctx context.Context, recipes ...*business.Recipe) error {
-		database, err := databaseFunc()
-		if err != nil {
-			return err
-		}
-
-		recipeCreator := NewRecipeCreator(database, logger)
-
-		return recipeCreator.CreateRecipes(ctx, recipes...)
-	}
 }

@@ -24,17 +24,16 @@ func NewRecipe(recipe *business.Recipe) *Recipe {
 }
 
 type Recipe struct {
-	ID          int64         `json:"id"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Ingredients []*Ingredient `json:"ingredients"`
+	ID          int64        `json:"id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Ingredients []Ingredient `json:"ingredients"`
 }
 
 // RecipePage is a data transfer object for the recipe page
 type RecipePage struct {
-	Items      any    `json:"items"`
-	TotalPages uint64 `json:"totalPages"`
-	TotalItems uint64 `json:"totalItems"`
+	Recipes []*Recipe `json:"recipes"`
+	Total   uint64    `json:"total"`
 }
 
 type Ingredient = input.Ingredient

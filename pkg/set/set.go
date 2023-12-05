@@ -2,39 +2,44 @@
 package set
 
 // New builds a Set based on a slice
-func New[T comparable](slice []T) *Set[T] {
+func New[T comparable](slice ...T) *Set[T] {
 	set := &Set[T]{}
 
 	for _, v := range slice {
-		set.Put(v)
+		set.Add(v)
 	}
 
 	return set
 }
 
-// Set list of non-repeating elements
+// Set unordered list of non-repeating elements
 type Set[T comparable] map[T]struct{}
 
-// Put inserts a new item input the Set
+// Add inserts a new item input the Set
 //
 // Complexity: O(1)
-func (s *Set[T]) Put(item T) {
+func (s *Set[T]) Add(item T) {
 	(*s)[item] = struct{}{}
 }
 
-// Has returns a bool that indicates if the item already exists input the Set
+// Del removes an item from the Set
 //
 // Complexity: O(1)
-func (s *Set[T]) Has(item T) bool {
-	_, ok := (*s)[item]
-	return ok
+func (s *Set[T]) Del(item T) {
+	delete(*s, item)
 }
 
-// Remove removes an item from the Set
+// Len returns number of total elements in the set
+func (s *Set[T]) Len() int {
+	return len(*s)
+}
+
+// Exists returns a bool that indicates if the item already exists input the Set
 //
 // Complexity: O(1)
-func (s *Set[T]) Remove(item T) {
-	delete(*s, item)
+func (s *Set[T]) Exists(item T) bool {
+	_, ok := (*s)[item]
+	return ok
 }
 
 // Slice transform the Set input a slice
