@@ -2,39 +2,37 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/cmd/cli/container"
-	"github.com/yael-castro/cb-search-engine-api/pkg/cli"
-	"log"
+	"github.com/yael-castro/cb-search-engine-api/pkg/command"
 	"os"
 	"os/signal"
 )
 
 func main() {
-	// Sets logger flags
-	log.SetFlags(0)
-
 	// Creates main context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, os.Interrupt)
 
 	go func() {
 		<-signalCh
-		cancel()
+		cancelFunc()
 	}()
 
 	// DI container input action!
-	var c cli.CLI
+	var c command.Command
 
-	err := container.New().Inject(&c)
+	err := container.Inject(ctx, &c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 
 	// Runs the CLI
-	err = c.Execute(ctx)
+	err = c.Execute(ctx, os.Args...)
 	if err != nil {
-		log.Println("ERROR |", err)
+		fmt.Println(err)
 	}
 }

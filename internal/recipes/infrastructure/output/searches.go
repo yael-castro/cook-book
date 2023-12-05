@@ -9,24 +9,24 @@ import (
 	"log"
 )
 
-// NewRecipesSearcher builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB writes
-func NewRecipesSearcher(collection *mongo.Collection) business.RecipesSearcher {
+// NewRecipesFinder builds an instance of the unique implementation for the port.RecipeFinder that use a MongoDB writes
+func NewRecipesFinder(collection *mongo.Collection) business.RecipesFinder {
 	if collection == nil {
 		panic("missing MongoDB collection")
 	}
 
-	return &recipesSearcher{
-		RecipeCollection: collection,
+	return recipesFinder{
+		recipeCollection: collection,
 		logger:           log.Default(),
 	}
 }
 
-type recipesSearcher struct {
-	RecipeCollection *mongo.Collection
+type recipesFinder struct {
+	recipeCollection *mongo.Collection
 	logger           *log.Logger
 }
 
-func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *business.RecipeFilter) (slice []*business.Recipe, err error) {
+func (s recipesFinder) FindRecipes(ctx context.Context, filter *business.RecipeFilter) (slice []*business.Recipe, err error) {
 	s.logger.Printf("RECIPE FILTER: %+v\n", filter)
 
 	// Establishing the limit of results and skip documents
@@ -35,8 +35,8 @@ func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *business.Rec
 	})
 
 	opts := []*options.FindOptions{
-		sorted.SetSkip(int64(filter.Start())),
-		sorted.SetLimit(int64(filter.Limit())),
+		sorted.SetSkip(int64(filter.Page * filter.Size)),
+		sorted.SetLimit(int64(filter.Size)),
 	}
 
 	// Encoding ingredient IDs
@@ -65,7 +65,7 @@ func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *business.Rec
 	}
 
 	// Counting documents
-	totalResults, err := s.RecipeCollection.CountDocuments(ctx, query)
+	totalResults, err := s.recipeCollection.CountDocuments(ctx, query)
 	if err != nil {
 		s.logger.Println(err)
 		return
@@ -75,9 +75,9 @@ func (s recipesSearcher) SearchRecipes(ctx context.Context, filter *business.Rec
 		return
 	}
 
-	filter.SetTotalResults(uint64(totalResults))
+	filter.Total = uint64(totalResults)
 
-	cursor, err := s.RecipeCollection.Find(ctx, query, opts...)
+	cursor, err := s.recipeCollection.Find(ctx, query, opts...)
 	if err != nil {
 		s.logger.Println(err)
 		return nil, err

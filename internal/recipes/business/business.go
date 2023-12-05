@@ -3,106 +3,90 @@ package business
 import (
 	"context"
 	"fmt"
-	"github.com/yael-castro/cb-search-engine-api/pkg/errors/code"
-	"github.com/yael-castro/cb-search-engine-api/pkg/pagination"
-	"github.com/yael-castro/cb-search-engine-api/pkg/set"
-	"strconv"
-	"strings"
 )
 
-func NewRecipeAdder(creator RecipesCreator) RecipesAdder {
-	if creator == nil {
-		panic("nil dependency")
+const (
+	minIngredientNumber = 1
+	maxIngredientNumber = 30
+)
+
+func NewRecipeCreator(saver RecipesSaver) RecipesCreator {
+	if saver == nil {
+		panic("missing dependencies")
 	}
 
-	return &recipeAdder{
-		creator: creator,
+	return recipesCreator{
+		saver: saver,
 	}
 }
 
-type recipeAdder struct {
-	creator RecipesCreator
+type recipesCreator struct {
+	saver RecipesSaver
 }
 
-func (r recipeAdder) AddRecipes(ctx context.Context, recipes ...*Recipe) error {
+func (r recipesCreator) CreateRecipes(ctx context.Context, recipes ...*Recipe) error {
 	for _, recipe := range recipes {
 		if err := recipe.Validate(); err != nil {
 			return err
 		}
 	}
 
-	return r.creator.CreateRecipes(ctx, recipes...)
+	return r.saver.SaveRecipes(ctx, recipes...)
 }
 
-func NewRecipeGenerator(maker RecipesMaker, creator RecipesCreator) RecipesGenerator {
+func NewRecipeGenerator(writer RecipesWriter, saver RecipesSaver) RecipesGenerator {
 	switch any(nil) {
-	case maker, creator:
+	case writer, saver:
 		panic("missing settings")
 	}
 
 	return &recipesGenerator{
-		maker:   maker,
-		creator: creator,
+		writer: writer,
+		saver:  saver,
 	}
 }
 
 type recipesGenerator struct {
-	maker   RecipesMaker
-	creator RecipesCreator
+	writer RecipesWriter
+	saver  RecipesSaver
 }
 
 func (r recipesGenerator) GenerateRecipes(ctx context.Context, recipesNumber uint32, ingredientsNumber uint32) error {
 	if ingredientsNumber < minIngredientNumber {
-		return code.New(InvalidMin, fmt.Sprintf("recipes needs at least %d ingredients", minIngredientNumber))
+		return fmt.Errorf("%w: recipes needs at least %d ingredients", ErrInvalidPageSize, minIngredientNumber)
 	}
 
 	if ingredientsNumber > maxIngredientNumber {
-		return code.New(InvalidMax, fmt.Sprintf("recipes can only have a maximum of %d ingredients", maxIngredientNumber))
+		return fmt.Errorf("%w: recipes can only have a maximum of %d ingredients", ErrInvalidPageSize, maxIngredientNumber)
 	}
 
-	recipes, err := r.maker.MakeRecipes(recipesNumber, ingredientsNumber)
+	recipes, err := r.writer.WriteRecipes(recipesNumber, ingredientsNumber)
 	if err != nil {
 		return err
 	}
 
-	return r.creator.CreateRecipes(ctx, recipes...)
+	return r.saver.SaveRecipes(ctx, recipes...)
 }
 
-// NewRecipesFinder builds a materialization for the port.RecipesSearcher interface
-func NewRecipesFinder(searcher RecipesSearcher) RecipesFinder {
-	if searcher == nil {
+// NewRecipesSearcher builds a materialization for the port.RecipesSearcher interface
+func NewRecipesSearcher(finder RecipesFinder) RecipesSearcher {
+	if finder == nil {
 		panic("nil dependency")
 	}
 
-	return &recipesFinder{
-		searcher: searcher,
+	return recipesSearcher{
+		finder: finder,
 	}
 }
 
-type recipesFinder struct {
-	searcher RecipesSearcher
+type recipesSearcher struct {
+	finder RecipesFinder
 }
 
-func (r recipesFinder) FindRecipes(ctx context.Context, str string, pagination *pagination.Pagination) ([]*Recipe, error) {
-	if str == "" {
-		return nil, code.New(MissingIngredientIdentifiers, "missing ingredients to make a recipe filter")
+func (r recipesSearcher) SearchRecipes(ctx context.Context, filter *RecipeFilter) ([]*Recipe, error) {
+	if err := filter.Validate(); err != nil {
+		return nil, err
 	}
 
-	filter := &RecipeFilter{
-		Pagination:  pagination,
-		Ingredients: make(set.Set[int64]),
-	}
-
-	ingredients := strings.SplitN(str, ",", 10)
-
-	for _, v := range ingredients {
-		ingredient, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			return nil, code.New(InvalidIngredientID, fmt.Sprintf("ingredient id '%s' is not valid number", v))
-		}
-
-		filter.Ingredients.Put(ingredient)
-	}
-
-	return r.searcher.SearchRecipes(ctx, filter)
+	return r.finder.FindRecipes(ctx, filter)
 }

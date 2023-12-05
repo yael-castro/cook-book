@@ -6,7 +6,7 @@ import (
 )
 
 func BusinessRecipe(recipe *Recipe) *business.Recipe {
-	ingredients := make([]*business.Ingredient, 0, len(recipe.Ingredients))
+	ingredients := make([]business.Ingredient, 0, len(recipe.Ingredients))
 
 	for _, ingredient := range recipe.Ingredients {
 		ingredients = append(ingredients, output.BusinessIngredient(ingredient))
@@ -22,7 +22,7 @@ func BusinessRecipe(recipe *Recipe) *business.Recipe {
 
 // NewRecipe builds an instance of *Recipe based on the *model.Recipe
 func NewRecipe(recipe *business.Recipe) *Recipe {
-	ingredients := make([]*Ingredient, 0, len(recipe.Ingredients))
+	ingredients := make([]Ingredient, 0, len(recipe.Ingredients))
 
 	for _, ingredient := range recipe.Ingredients {
 		ingredients = append(ingredients, output.NewIngredient(ingredient))
@@ -38,10 +38,10 @@ func NewRecipe(recipe *business.Recipe) *Recipe {
 
 // Recipe kitchen recipe data
 type Recipe struct {
-	ID          int64         `bson:"_id"`
-	Name        string        `bson:",omitempty"`
-	Description string        `bson:",omitempty"`
-	Ingredients []*Ingredient `bson:",omitempty"`
+	ID          int64        `bson:"_id"`
+	Name        string       `bson:",omitempty"`
+	Description string       `bson:",omitempty"`
+	Ingredients []Ingredient `bson:",omitempty"`
 }
 
 type Ingredient = output.Ingredient

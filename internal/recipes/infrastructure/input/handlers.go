@@ -1,25 +1,26 @@
 package input
 
 import (
+	"fmt"
+	"github.com/labstack/echo/v4"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/pkg/pagination"
-	"github.com/yael-castro/cb-search-engine-api/pkg/server"
-	"github.com/yael-castro/cb-search-engine-api/pkg/server/response"
+	"github.com/yael-castro/cb-search-engine-api/pkg/set"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
-func NewRecipesCreator(adder business.RecipesAdder, handler server.ErrorHandler) http.HandlerFunc {
-	switch any(nil) {
-	case adder, handler:
+func PostRecipes(creator business.RecipesCreator) echo.HandlerFunc {
+	if creator == nil {
 		panic("nil dependency")
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(c echo.Context) error {
 		recipes := make([]*Recipe, 0)
 
 		// Unmarshal the request body
-		if !server.Bind(w, r, &recipes) {
-			return
+		if err := c.Bind(&recipes); err != nil {
+			return err
 		}
 
 		// Conversion between data types
@@ -30,48 +31,73 @@ func NewRecipesCreator(adder business.RecipesAdder, handler server.ErrorHandler)
 		}
 
 		// Creates many recipes
-		err := adder.AddRecipes(r.Context(), arr...)
+		err := creator.CreateRecipes(c.Request().Context(), arr...)
 		if err != nil {
-			handler.HandleError(w, r, err)
-			return
+			return err
 		}
 
 		// Success response
-		server.JSON(w, http.StatusCreated, response.Common{
-			Message: "success operation",
+		return c.JSON(http.StatusCreated, echo.Map{
+			"message": "success operation",
 		})
 	}
 }
 
-// NewRecipesFinder builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipesSearcher
-func NewRecipesFinder(finder business.RecipesFinder, handler server.ErrorHandler) http.HandlerFunc {
-	switch any(nil) {
-	case finder, handler:
+// GetRecipes builds an instance of the unique implementation for the RecipeProvider interface based on a port.RecipesSearcher
+func GetRecipes(searcher business.RecipesSearcher) echo.HandlerFunc {
+	if searcher == nil {
 		panic("nil dependency")
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
+	return func(c echo.Context) (err error) {
+		q := c.QueryParams()
 
-		p := pagination.New(q.Get("page"), q.Get("limit"))
+		filter := business.RecipeFilter{
+			Ingredients: make(set.Set[int64]),
+		}
 
-		recipes, err := finder.FindRecipes(r.Context(), q.Get("ingredients"), p)
+		filter.Page, err = strconv.ParseUint(q.Get("page"), 10, 64)
 		if err != nil {
-			handler.HandleError(w, r, err)
+			err = echo.NewHTTPError(http.StatusBadRequest, "missing query param 'page'")
 			return
 		}
 
-		items := make([]*Recipe, 0, len(recipes))
-		for _, recipe := range recipes {
-			items = append(items, NewRecipe(recipe))
+		filter.Size, err = strconv.ParseUint(q.Get("size"), 10, 64)
+		if err != nil {
+			err = echo.NewHTTPError(http.StatusBadRequest, "missing query param 'size'")
+			return
 		}
 
-		page := RecipePage{
-			Items:      items,
-			TotalPages: p.Pages(),
-			TotalItems: p.TotalResults(),
+		// Decoding ingredient values
+		ingredient := int64(0)
+		ingredients := strings.SplitN(q.Get("ingredients"), ",", 10)
+
+		for _, v := range ingredients {
+			ingredient, err = strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				err = fmt.Errorf("%w: ingredient id '%s' is not valid number", business.ErrInvalidIngredientID, v)
+				return
+			}
+
+			filter.Ingredients.Add(ingredient)
 		}
 
-		_ = server.JSON(w, http.StatusOK, page)
+		// Searching recipes
+		results, err := searcher.SearchRecipes(c.Request().Context(), &filter)
+		if err != nil {
+			return err
+		}
+
+		// Encoding results
+		recipes := make([]*Recipe, 0, len(results))
+
+		for i := range results {
+			recipes = append(recipes, NewRecipe(results[i]))
+		}
+
+		return c.JSON(http.StatusOK, RecipePage{
+			Recipes: recipes,
+			Total:   filter.Total,
+		})
 	}
 }

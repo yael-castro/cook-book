@@ -5,8 +5,8 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 )
 
-func BusinessIngredients(ingredientsSlice []*Ingredient) []*business.Ingredient {
-	ingredients := make([]*business.Ingredient, 0, len(ingredientsSlice))
+func BusinessIngredients(ingredientsSlice []Ingredient) []business.Ingredient {
+	ingredients := make([]business.Ingredient, 0, len(ingredientsSlice))
 
 	for _, ingredient := range ingredientsSlice {
 		ingredients = append(ingredients, BusinessIngredient(ingredient))
@@ -15,17 +15,17 @@ func BusinessIngredients(ingredientsSlice []*Ingredient) []*business.Ingredient 
 	return ingredients
 }
 
-func BusinessIngredient(ingredient *Ingredient) *business.Ingredient {
-	return &business.Ingredient{
-		NutritionalInformation: (*business.NutritionalInformation)(ingredient.NutritionalInformation),
+func BusinessIngredient(ingredient Ingredient) business.Ingredient {
+	return business.Ingredient{
+		NutritionalInformation: (business.NutritionalInformation)(ingredient.NutritionalInformation),
 		ID:                     ingredient.ID,
 		Name:                   ingredient.Name,
 		Description:            ingredient.Description,
 	}
 }
 
-func NewIngredients(ingredientsSlice []*business.Ingredient) []*Ingredient {
-	ingredients := make([]*Ingredient, 0, len(ingredientsSlice))
+func NewIngredients(ingredientsSlice []business.Ingredient) []Ingredient {
+	ingredients := make([]Ingredient, 0, len(ingredientsSlice))
 
 	for _, ingredient := range ingredientsSlice {
 		ingredients = append(ingredients, NewIngredient(ingredient))
@@ -34,9 +34,9 @@ func NewIngredients(ingredientsSlice []*business.Ingredient) []*Ingredient {
 	return ingredients
 }
 
-func NewIngredient(ingredient *business.Ingredient) *Ingredient {
-	return &Ingredient{
-		NutritionalInformation: (*NutritionalInformation)(ingredient.NutritionalInformation),
+func NewIngredient(ingredient business.Ingredient) Ingredient {
+	return Ingredient{
+		NutritionalInformation: (NutritionalInformation)(ingredient.NutritionalInformation),
 		ID:                     ingredient.ID,
 		Name:                   ingredient.Name,
 		Description:            ingredient.Description,
@@ -44,10 +44,10 @@ func NewIngredient(ingredient *business.Ingredient) *Ingredient {
 }
 
 type Ingredient struct {
-	*NutritionalInformation `json:"nutritional_information,omitempty"`
-	ID                      int64  `json:"id"`
-	Name                    string `json:"name,omitempty"`
-	Description             string `json:"description,omitempty"`
+	NutritionalInformation `json:"nutritional_information,omitempty"`
+	ID                     int64  `json:"id"`
+	Name                   string `json:"name,omitempty"`
+	Description            string `json:"description,omitempty"`
 }
 
 type NutritionalInformation struct {

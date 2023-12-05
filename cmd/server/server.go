@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/labstack/echo/v4"
 	"github.com/yael-castro/cb-search-engine-api/cmd/server/container"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
+	"time"
 )
 
 const defaultPort = "8080"
@@ -21,36 +22,35 @@ func main() {
 	log.SetFlags(log.Flags() | log.Llongfile)
 
 	// Creates main context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	signalCh := make(chan os.Signal)
 	signal.Notify(signalCh, os.Interrupt)
 
 	go func() {
 		<-signalCh
-		cancel()
+		cancelFunc()
 	}()
 
-	// DI container input action!
-	var h http.Handler
+	e := echo.New()
 
-	err := container.New().Inject(&h)
+	// DI container input action!
+	err := container.Inject(ctx, e)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Builds the server
-	server := http.Server{
-		Addr:    ":" + port,
-		Handler: h,
-	}
-
 	go func() {
 		<-ctx.Done()
-		server.Close()
+
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
+
+		_ = e.Shutdown(ctx)
 	}()
 
 	// Runs the server
+	log.Printf("%v\n", e)
 	log.Printf("Server version '%s' is running on port '%s'\n", container.GitCommit, port)
-	log.Println(server.ListenAndServe())
+	log.Fatal(e.Start(":" + port))
 }
