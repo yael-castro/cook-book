@@ -1,4 +1,4 @@
-package input
+package handler
 
 import (
 	"errors"
@@ -20,9 +20,10 @@ func ErrorHandler(handler echo.HTTPErrorHandler) echo.HTTPErrorHandler {
 			switch as {
 			case
 				business.ErrInvalidRecipe,
-				business.ErrInvalidPageSize,
+				business.ErrInvalidRecipes,
+				business.ErrInvalidIngredientID,
 				business.ErrInvalidIngredients,
-				business.ErrInvalidIngredientID:
+				business.ErrInvalidPageSize:
 				_ = c.JSON(http.StatusBadRequest, message)
 			}
 

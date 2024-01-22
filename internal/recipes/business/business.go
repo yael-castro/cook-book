@@ -2,12 +2,6 @@ package business
 
 import (
 	"context"
-	"fmt"
-)
-
-const (
-	minIngredientNumber = 1
-	maxIngredientNumber = 30
 )
 
 func NewRecipeCreator(saver RecipesSaver) RecipesCreator {
@@ -51,16 +45,12 @@ type recipesGenerator struct {
 	saver  RecipesSaver
 }
 
-func (r recipesGenerator) GenerateRecipes(ctx context.Context, recipesNumber uint32, ingredientsNumber uint32) error {
-	if ingredientsNumber < minIngredientNumber {
-		return fmt.Errorf("%w: recipes needs at least %d ingredients", ErrInvalidPageSize, minIngredientNumber)
+func (r recipesGenerator) GenerateRecipes(ctx context.Context, generate GenerateRecipes) error {
+	if err := generate.Validate(); err != nil {
+		return err
 	}
 
-	if ingredientsNumber > maxIngredientNumber {
-		return fmt.Errorf("%w: recipes can only have a maximum of %d ingredients", ErrInvalidPageSize, maxIngredientNumber)
-	}
-
-	recipes, err := r.writer.WriteRecipes(recipesNumber, ingredientsNumber)
+	recipes, err := r.writer.WriteRecipes(ctx, generate)
 	if err != nil {
 		return err
 	}
