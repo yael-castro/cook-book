@@ -11,7 +11,7 @@ type (
 	}
 
 	RecipesGenerator interface {
-		GenerateRecipes(context.Context, uint32, uint32) error
+		GenerateRecipes(context.Context, GenerateRecipes) error
 	}
 
 	RecipesCreator interface {
@@ -26,7 +26,7 @@ type (
 	}
 
 	RecipesWriter interface {
-		WriteRecipes(uint32, uint32) ([]*Recipe, error)
+		WriteRecipes(context.Context, GenerateRecipes) ([]*Recipe, error) // TODO: evaluate struct naming
 	}
 
 	RecipesSaver interface {

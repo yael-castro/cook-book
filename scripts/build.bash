@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # Global variables
-declare -r module=github.com/yael-castro/cb-search-engine-api
-declare -r commit=$(git log --pretty=format:'%h' -n 1)
+module=github.com/yael-castro/cb-search-engine-api
+commit=$(git log --pretty=format:'%h' -n 1)
 
 # Command arguments
 subcommand="$1"
 shift
 
 if [ "$subcommand" = "cli" ]; then
-  cd cmd/cli
+  cd cmd/cli || exit
   path="$module/cmd/cli/container"
 
   printf "\nTo compile the CLI the following variables are required.\n\n"
@@ -21,7 +21,7 @@ if [ "$subcommand" = "cli" ]; then
 
   if ! CGO=0 go build \
     -o ../../build/ \
-    -ldflags="-X '$path.mongoDSN=$dsn' -X '$path.mongoDB=$db' -X '$path.GitCommit=$commit'"
+    -ldflags="-X '$path.mongoDSN=$dsn' -X '$path.mongoDB=$db' -X '$path.gitCommit=$commit'"
   then
     exit
   fi
@@ -35,7 +35,7 @@ if [ "$subcommand" = "cli" ]; then
 fi
 
 if [ "$subcommand" = "server" ]; then
-  cd cmd/server
+  cd cmd/server || exit
   path="$module/cmd/server/container"
 
   printf "\nBuilding API REST in \"/build\" directory\n"

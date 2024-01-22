@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/yael-castro/cb-search-engine-api/cmd/cli/container"
-	"github.com/yael-castro/cb-search-engine-api/pkg/command"
 	"os"
 	"os/signal"
 )
@@ -22,17 +21,13 @@ func main() {
 	}()
 
 	// DI container input action!
-	var c command.Command
+	var cmd cobra.Command
 
-	err := container.Inject(ctx, &c)
+	err := container.Inject(ctx, &cmd)
 	if err != nil {
-		fmt.Println(err)
+		cmd.PrintErr(err)
 		return
 	}
 
-	// Runs the CLI
-	err = c.Execute(ctx, os.Args...)
-	if err != nil {
-		fmt.Println(err)
-	}
+	_ = cmd.ExecuteContext(ctx) // TODO: evaluate error for exit code
 }

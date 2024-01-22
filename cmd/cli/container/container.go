@@ -3,14 +3,15 @@ package container
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/command"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
-	"github.com/yael-castro/cb-search-engine-api/pkg/command"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
+	"os"
 )
 
 var (
@@ -26,8 +27,8 @@ const (
 
 func Inject(ctx context.Context, a any) error {
 	switch a := a.(type) {
-	case *command.Command:
-		return injectCLI(ctx, a)
+	case *cobra.Command:
+		return injectCommand(ctx, a)
 	case *mongo.Database:
 		return injectMongoDatabase(ctx, a)
 	case *func() (*mongo.Database, error):
@@ -37,7 +38,7 @@ func Inject(ctx context.Context, a any) error {
 	return fmt.Errorf("type \"%T\" is not supported", a)
 }
 
-func injectCLI(ctx context.Context, cl *command.Command) (err error) {
+func injectCommand(ctx context.Context, cmd *cobra.Command) (err error) {
 	logger := log.Default()
 
 	var databaseFunc func() (*mongo.Database, error)
@@ -54,17 +55,18 @@ func injectCLI(ctx context.Context, cl *command.Command) (err error) {
 	recipeSetGenerator := business.NewRecipeGenerator(recipesMaker, recipeCreator)
 
 	// Driving adapters
-	recipeListGenerator := input.CommandGenerateRecipes(recipeSetGenerator)
+	recipeListGenerator := command.GenerateRecipes(recipeSetGenerator)
 
-	config := command.Configuration{
-		Version:     gitCommit,
-		Description: "tool for managing the recipes writes and can test the search engine.",
-		Commands: []command.Command{
-			recipeListGenerator,
-		},
+	// Setting command
+	*cmd = cobra.Command{
+		Use:     os.Args[0],
+		Short:   "Tool for managing the recipes operations.",
+		Version: gitCommit,
 	}
+	cmd.CompletionOptions.DisableDefaultCmd = true
 
-	*cl = command.New(config)
+	// Setting sub-commands
+	cmd.AddCommand(recipeListGenerator)
 	return
 }
 

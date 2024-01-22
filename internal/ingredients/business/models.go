@@ -1,7 +1,7 @@
 package business
 
 import (
-	"errors"
+	"fmt"
 )
 
 const (
@@ -22,11 +22,11 @@ type Ingredient struct {
 func (i Ingredient) Validate() error {
 	switch {
 	case i.ID < 1:
-		return errors.New("missing ingredient id")
-	case i.Name == "":
-		return errors.New("missing ingredient name")
-	case i.Description == "":
-		return errors.New("missing ingredient description")
+		return fmt.Errorf("%w: ingredient id '%d' is not valid", ErrInvalidID, i.ID)
+	case len(i.Name) == 0:
+		return fmt.Errorf("%w: ingredient name '%s' is not valid", ErrInvalidName, i.Name)
+	case len(i.Description) == 0:
+		return fmt.Errorf("%w: ingredient description '%s' is not valid", ErrInvalidDescription, i.Description)
 	}
 
 	return i.NutritionalInformation.Validate()

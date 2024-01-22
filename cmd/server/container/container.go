@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	ingredienthdlr "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/input/handler"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input"
+	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -51,17 +52,17 @@ func injectHandler(ctx context.Context, e *echo.Echo) (err error) {
 	// Primary adapters
 
 	// Setting http error handler
-	e.HTTPErrorHandler = input.ErrorHandler(e.HTTPErrorHandler)
+	e.HTTPErrorHandler = ingredienthdlr.ErrorHandler(handler.ErrorHandler(e.HTTPErrorHandler))
 
 	// Builds HTTP server
 	e.POST(
 		"/v1/recipes",
-		input.PostRecipes(recipeCreator),
+		handler.PostRecipes(recipeCreator),
 	)
 
 	e.GET(
 		"/v1/recipes",
-		input.GetRecipes(recipeSearcher),
+		handler.GetRecipes(recipeSearcher),
 	)
 
 	return

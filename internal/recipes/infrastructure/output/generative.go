@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"math/rand"
@@ -13,20 +14,26 @@ func NewRecipesWriter() business.RecipesWriter {
 
 type recipesWriter struct{}
 
-func (r recipesWriter) WriteRecipes(recipesNumber, ingredientsNumber uint32) ([]*business.Recipe, error) {
-	recipes := make([]*business.Recipe, 0, recipesNumber)
+func (r recipesWriter) WriteRecipes(ctx context.Context, generate business.GenerateRecipes) ([]*business.Recipe, error) {
+	recipes := make([]*business.Recipe, 0, generate.Recipes)
 
-	for recipesNumber > 0 {
+	for generate.Recipes > 0 {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
 		id := time.Now().UnixNano()
 
 		recipe := business.Recipe{
 			ID:          id,
 			Name:        fmt.Sprintf("RECIPE #%d", id),
-			Ingredients: r.generateIngredients(ingredientsNumber),
+			Ingredients: r.generateIngredients(generate.Recipes),
 		}
 
 		recipes = append(recipes, &recipe)
-		recipesNumber--
+		generate.Recipes--
 	}
 
 	return recipes, nil
