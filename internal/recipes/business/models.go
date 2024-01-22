@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
 	"github.com/yael-castro/cb-search-engine-api/pkg/set"
-	"strconv"
 )
 
 // RecipeFilter filter for paginated recipe searches
@@ -17,14 +16,14 @@ type RecipeFilter struct {
 func (r RecipeFilter) Validate() error {
 	switch {
 	case r.Size < 1 || r.Size > 25:
-		return ErrInvalidPageSize
+		return fmt.Errorf("%w: %d is not a valid page size", ErrInvalidPageSize, r.Size)
 	case r.Ingredients.Len() == 0:
 		return fmt.Errorf("%w: missing ingredients to perform a recipe search", ErrInvalidIngredients)
 	}
 
 	for ingredientID := range r.Ingredients {
 		if ingredientID <= 0 {
-			return fmt.Errorf("%w: invalid ingredient id", ErrInvalidIngredients)
+			return fmt.Errorf("%w: %d is not a valid ingredient id", ErrInvalidIngredients, ingredientID)
 		}
 	}
 
@@ -56,21 +55,27 @@ func (r *Recipe) Validate() (err error) {
 	return
 }
 
-// Supported values for RecipeError
 const (
-	_ RecipeError = iota
-	ErrInvalidRecipe
-	ErrInvalidPageSize
-	ErrInvalidIngredients
-	ErrInvalidIngredientID
+	minRecipes     = 1
+	minIngredients = 1
+	maxIngredients = 30
 )
 
-// RecipeError defines an error related to a recipe error
-type RecipeError uint8
+type GenerateRecipes struct {
+	Recipes, Ingredients uint32
+}
 
-// Error returns the string value of RecipeError
-func (r RecipeError) Error() string {
-	return "recipes:" + strconv.FormatUint(uint64(r), 10)
+func (g GenerateRecipes) Validate() error {
+	switch {
+	case g.Recipes < minRecipes:
+		return fmt.Errorf("%w: missing at least recipe", ErrInvalidRecipes)
+	case g.Ingredients < minIngredients:
+		return fmt.Errorf("%w: recipes needs at least %d ingredients", ErrInvalidIngredients, minIngredients)
+	case g.Ingredients > maxIngredients:
+		return fmt.Errorf("%w: recipes can only have a maximum of %d ingredients", ErrInvalidIngredients, maxIngredients)
+	}
+
+	return nil
 }
 
 // Aliases

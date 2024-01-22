@@ -1,4 +1,4 @@
-package input
+package handler
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ func PostRecipes(creator business.RecipesCreator) echo.HandlerFunc {
 		arr := make([]*business.Recipe, 0, len(recipes))
 
 		for _, recipe := range recipes {
-			arr = append(arr, BusinessRecipe(recipe))
+			arr = append(arr, recipe.ToBModel())
 		}
 
 		// Creates many recipes

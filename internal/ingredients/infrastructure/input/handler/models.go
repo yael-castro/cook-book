@@ -1,4 +1,4 @@
-package input
+package handler
 
 import (
 	ingredients "github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
@@ -9,19 +9,10 @@ func BusinessIngredients(ingredientsSlice []Ingredient) []business.Ingredient {
 	ingredients := make([]business.Ingredient, 0, len(ingredientsSlice))
 
 	for _, ingredient := range ingredientsSlice {
-		ingredients = append(ingredients, BusinessIngredient(ingredient))
+		ingredients = append(ingredients, ingredient.ToBModel())
 	}
 
 	return ingredients
-}
-
-func BusinessIngredient(ingredient Ingredient) business.Ingredient {
-	return business.Ingredient{
-		NutritionalInformation: (business.NutritionalInformation)(ingredient.NutritionalInformation),
-		ID:                     ingredient.ID,
-		Name:                   ingredient.Name,
-		Description:            ingredient.Description,
-	}
 }
 
 func NewIngredients(ingredientsSlice []business.Ingredient) []Ingredient {
@@ -48,6 +39,15 @@ type Ingredient struct {
 	ID                     int64  `json:"id"`
 	Name                   string `json:"name,omitempty"`
 	Description            string `json:"description,omitempty"`
+}
+
+func (i Ingredient) ToBModel() business.Ingredient {
+	return business.Ingredient{
+		NutritionalInformation: (business.NutritionalInformation)(i.NutritionalInformation),
+		ID:                     i.ID,
+		Name:                   i.Name,
+		Description:            i.Description,
+	}
 }
 
 type NutritionalInformation struct {
