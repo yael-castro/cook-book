@@ -1,33 +1,14 @@
 package handler
 
 import (
-	ingredients "github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
+	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
 )
 
-func BusinessIngredients(ingredientsSlice []Ingredient) []business.Ingredient {
-	ingredients := make([]business.Ingredient, 0, len(ingredientsSlice))
-
-	for _, ingredient := range ingredientsSlice {
-		ingredients = append(ingredients, ingredient.ToBModel())
-	}
-
-	return ingredients
-}
-
-func NewIngredients(ingredientsSlice []business.Ingredient) []Ingredient {
-	ingredients := make([]Ingredient, 0, len(ingredientsSlice))
-
-	for _, ingredient := range ingredientsSlice {
-		ingredients = append(ingredients, NewIngredient(ingredient))
-	}
-
-	return ingredients
-}
+type Mass = business.Mass
 
 func NewIngredient(ingredient business.Ingredient) Ingredient {
 	return Ingredient{
-		NutritionalInformation: (NutritionalInformation)(ingredient.NutritionalInformation),
+		NutritionalInformation: NewNutritionalInformation(ingredient.NutritionalInformation),
 		ID:                     ingredient.ID,
 		Name:                   ingredient.Name,
 		Description:            ingredient.Description,
@@ -41,13 +22,17 @@ type Ingredient struct {
 	Description            string `json:"description,omitempty"`
 }
 
-func (i Ingredient) ToBModel() business.Ingredient {
+func (i Ingredient) ToBusiness() business.Ingredient {
 	return business.Ingredient{
-		NutritionalInformation: (business.NutritionalInformation)(i.NutritionalInformation),
+		NutritionalInformation: i.NutritionalInformation.ToBusiness(),
 		ID:                     i.ID,
 		Name:                   i.Name,
 		Description:            i.Description,
 	}
+}
+
+func NewNutritionalInformation(information business.NutritionalInformation) NutritionalInformation {
+	return (NutritionalInformation)(information)
 }
 
 type NutritionalInformation struct {
@@ -58,4 +43,31 @@ type NutritionalInformation struct {
 	Fiber    Mass  `json:"fiber,omitempty"`
 }
 
-type Mass = ingredients.Mass
+func (i NutritionalInformation) ToBusiness() business.NutritionalInformation {
+	return (business.NutritionalInformation)(i)
+}
+
+type IngredientPage struct {
+	Total       uint64       `json:"total"`
+	Ingredients []Ingredient `json:"ingredients"`
+}
+
+func NewIngredients(ingredientsSlice []business.Ingredient) []Ingredient {
+	ingredients := make([]Ingredient, 0, len(ingredientsSlice))
+
+	for _, ingredient := range ingredientsSlice {
+		ingredients = append(ingredients, NewIngredient(ingredient))
+	}
+
+	return ingredients
+}
+
+func BusinessIngredients(ingredientsSlice []Ingredient) []business.Ingredient {
+	ingredients := make([]business.Ingredient, 0, len(ingredientsSlice))
+
+	for _, ingredient := range ingredientsSlice {
+		ingredients = append(ingredients, ingredient.ToBusiness())
+	}
+
+	return ingredients
+}

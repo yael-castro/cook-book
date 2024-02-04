@@ -46,13 +46,13 @@ This project implements architecture pattern [ports and adapters](https://alista
 ```
 .
 ├── cmd
-│   └── {command}
-│       └── container (di container)
+│   └── {binary}
+│       └── container                    (Dependency injection)
 ├── internal
-│   └── {feature}
-│       ├── business
+│   └── {feature}                        (Business logic and adpaters for a specific feature)
+│       ├── business                     (Use cases, business rules and entities)
 │       └── infrastructure
-│           ├── input  (everything related to "driving" adapters)
-│           └── output (everything related to "driven" adapters)
-└── pkg (global and public code, potentially libraries)
+│           ├── input                    (Everything related to "drive" adapters)
+│           └── output                   (Everything related to "driven" adapters)
+└── pkg                                  (Global and public code, potentially libraries)
 ```

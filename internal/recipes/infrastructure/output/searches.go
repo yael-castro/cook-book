@@ -93,7 +93,7 @@ func (s recipesFinder) FindRecipes(ctx context.Context, filter *business.RecipeF
 			return
 		}
 
-		slice = append(slice, recipe.ToBModel())
+		slice = append(slice, recipe.ToBusiness())
 	}
 
 	return

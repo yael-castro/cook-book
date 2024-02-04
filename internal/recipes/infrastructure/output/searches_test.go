@@ -48,6 +48,7 @@ func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
 	}
 
 	log.SetOutput(io.Discard)
+
 	var mongoDB mongo.Database
 
 	if err := container.Inject(context.TODO(), &mongoDB); err != nil {

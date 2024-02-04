@@ -48,14 +48,11 @@ func injectCommand(ctx context.Context, cmd *cobra.Command) (err error) {
 	}
 
 	// Driven adapters
-	recipesMaker := output.NewRecipesWriter()
-	recipeCreator := output.NewRecipeSaverFunc(databaseFunc, logger)
+	recipesWriter := output.NewRecipesWriter()
+	recipesSaver := output.NewRecipeSaverFunc(databaseFunc, logger)
 
 	// Ports for driving adapters
-	recipeSetGenerator := business.NewRecipeGenerator(recipesMaker, recipeCreator)
-
-	// Driving adapters
-	recipeListGenerator := command.GenerateRecipes(recipeSetGenerator)
+	recipesGenerator := business.NewRecipeGenerator(recipesWriter, recipesSaver)
 
 	// Setting command
 	*cmd = cobra.Command{
@@ -63,10 +60,12 @@ func injectCommand(ctx context.Context, cmd *cobra.Command) (err error) {
 		Short:   "Tool for managing the recipes operations.",
 		Version: gitCommit,
 	}
+
 	cmd.CompletionOptions.DisableDefaultCmd = true
 
-	// Setting sub-commands
-	cmd.AddCommand(recipeListGenerator)
+	// Setting drive adapters (sub-commands)
+	cmd.AddCommand(command.GenerateRecipes(recipesGenerator))
+
 	return
 }
 

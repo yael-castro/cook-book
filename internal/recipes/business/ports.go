@@ -26,7 +26,7 @@ type (
 	}
 
 	RecipesWriter interface {
-		WriteRecipes(context.Context, GenerateRecipes) ([]*Recipe, error) // TODO: evaluate struct naming
+		WriteRecipes(context.Context, GenerateRecipes) ([]*Recipe, error)
 	}
 
 	RecipesSaver interface {
@@ -36,8 +36,10 @@ type (
 
 var _ RecipesSaver = RecipesSaverFunc(nil)
 
+// RecipesSaverFunc functional interface for RecipesSaver
 type RecipesSaverFunc func(context.Context, ...*Recipe) error
 
+// SaveRecipes executes RecipesSaverFunc
 func (f RecipesSaverFunc) SaveRecipes(ctx context.Context, recipe ...*Recipe) error {
 	return f(ctx, recipe...)
 }

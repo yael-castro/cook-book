@@ -27,7 +27,7 @@ func PostRecipes(creator business.RecipesCreator) echo.HandlerFunc {
 		arr := make([]*business.Recipe, 0, len(recipes))
 
 		for _, recipe := range recipes {
-			arr = append(arr, recipe.ToBModel())
+			arr = append(arr, recipe.ToBusiness())
 		}
 
 		// Creates many recipes
@@ -56,36 +56,28 @@ func GetRecipes(searcher business.RecipesSearcher) echo.HandlerFunc {
 			Ingredients: make(set.Set[int64]),
 		}
 
-		filter.Page, err = strconv.ParseUint(q.Get("page"), 10, 64)
-		if err != nil {
-			err = echo.NewHTTPError(http.StatusBadRequest, "missing query param 'page'")
-			return
-		}
+		// Decoding query params
+		filter.Page, _ = strconv.ParseUint(q.Get("page"), 10, 64)
+		filter.Size, _ = strconv.ParseUint(q.Get("size"), 10, 64)
 
-		filter.Size, err = strconv.ParseUint(q.Get("size"), 10, 64)
-		if err != nil {
-			err = echo.NewHTTPError(http.StatusBadRequest, "missing query param 'size'")
-			return
-		}
-
-		// Decoding ingredient values
-		ingredient := int64(0)
+		// Decoding query param "ingredients"
+		ingredientID := int64(0)
 		ingredients := strings.SplitN(q.Get("ingredients"), ",", 10)
 
-		for _, v := range ingredients {
-			ingredient, err = strconv.ParseInt(v, 10, 64)
+		for _, ingredient := range ingredients {
+			ingredientID, err = strconv.ParseInt(ingredient, 10, 64)
 			if err != nil {
-				err = fmt.Errorf("%w: ingredient id '%s' is not valid number", business.ErrInvalidIngredientID, v)
+				err = echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("ingredient id '%s' is not valid number", ingredient))
 				return
 			}
 
-			filter.Ingredients.Add(ingredient)
+			filter.Ingredients.Add(ingredientID)
 		}
 
 		// Searching recipes
 		results, err := searcher.SearchRecipes(c.Request().Context(), &filter)
 		if err != nil {
-			return err
+			return
 		}
 
 		// Encoding results

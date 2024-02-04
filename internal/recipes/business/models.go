@@ -61,6 +61,7 @@ const (
 	maxIngredients = 30
 )
 
+// GenerateRecipes contains the parameters used generate recipes
 type GenerateRecipes struct {
 	Recipes, Ingredients uint32
 }
@@ -68,11 +69,11 @@ type GenerateRecipes struct {
 func (g GenerateRecipes) Validate() error {
 	switch {
 	case g.Recipes < minRecipes:
-		return fmt.Errorf("%w: missing at least recipe", ErrInvalidRecipes)
+		return fmt.Errorf("%w: missing at least %d recipe(s)", ErrInvalidRecipes, minRecipes)
 	case g.Ingredients < minIngredients:
-		return fmt.Errorf("%w: recipes needs at least %d ingredients", ErrInvalidIngredients, minIngredients)
+		return fmt.Errorf("%w: recipes needs at least %d ingredient(s)", ErrInvalidIngredients, minIngredients)
 	case g.Ingredients > maxIngredients:
-		return fmt.Errorf("%w: recipes can only have a maximum of %d ingredients", ErrInvalidIngredients, maxIngredients)
+		return fmt.Errorf("%w: recipes can only have a maximum of %d ingredient(s)", ErrInvalidIngredients, maxIngredients)
 	}
 
 	return nil

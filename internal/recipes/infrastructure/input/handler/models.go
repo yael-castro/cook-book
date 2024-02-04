@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/input/handler"
+	ingredientshandler "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/input/handler"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 )
 
@@ -10,7 +10,7 @@ func NewRecipe(recipe *business.Recipe) *Recipe {
 		ID:          recipe.ID,
 		Name:        recipe.Name,
 		Description: recipe.Description,
-		Ingredients: handler.NewIngredients(recipe.Ingredients),
+		Ingredients: ingredientshandler.NewIngredients(recipe.Ingredients),
 	}
 }
 
@@ -21,12 +21,12 @@ type Recipe struct {
 	Ingredients []Ingredient `json:"ingredients"`
 }
 
-func (r *Recipe) ToBModel() *business.Recipe {
+func (r *Recipe) ToBusiness() *business.Recipe {
 	return &business.Recipe{
 		ID:          r.ID,
 		Name:        r.Name,
 		Description: r.Description,
-		Ingredients: handler.BusinessIngredients(r.Ingredients),
+		Ingredients: ingredientshandler.BusinessIngredients(r.Ingredients),
 	}
 }
 
@@ -36,4 +36,4 @@ type RecipePage struct {
 	Total   uint64    `json:"total"`
 }
 
-type Ingredient = handler.Ingredient
+type Ingredient = ingredientshandler.Ingredient

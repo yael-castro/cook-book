@@ -4,15 +4,6 @@ import (
 	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
 )
 
-func BusinessIngredient(ingredient Ingredient) business.Ingredient {
-	return business.Ingredient{
-		NutritionalInformation: (business.NutritionalInformation)(ingredient.NutritionalInformation),
-		ID:                     ingredient.ID,
-		Name:                   ingredient.Name,
-		Description:            ingredient.Description,
-	}
-}
-
 func NewIngredient(ingredient business.Ingredient) Ingredient {
 	return Ingredient{
 		NutritionalInformation: (NutritionalInformation)(ingredient.NutritionalInformation),
@@ -29,9 +20,14 @@ type Ingredient struct {
 	Description            string `bson:",omitempty"`
 }
 
-func (i Ingredient) Validate() error {
-	// TODO: validate ingredient data
-	return nil
+// ToBusiness transforms the Ingredient object into an object that the business can understand.
+func (i Ingredient) ToBusiness() business.Ingredient {
+	return business.Ingredient{
+		NutritionalInformation: i.NutritionalInformation.ToBusiness(),
+		ID:                     i.ID,
+		Name:                   i.Name,
+		Description:            i.Description,
+	}
 }
 
 type NutritionalInformation struct {
@@ -40,4 +36,9 @@ type NutritionalInformation struct {
 	Proteins business.Mass `bson:",omitempty"`
 	Carbs    business.Mass `bson:",omitempty"`
 	Fiber    business.Mass `bson:",omitempty"`
+}
+
+// ToBusiness transforms the NutritionalInformation object into an object that the business can understand.
+func (n NutritionalInformation) ToBusiness() business.NutritionalInformation {
+	return (business.NutritionalInformation)(n)
 }

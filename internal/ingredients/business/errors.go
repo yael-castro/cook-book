@@ -8,6 +8,8 @@ const (
 	ErrInvalidID
 	ErrInvalidName
 	ErrInvalidDescription
+	ErrInvalidCategory
+	ErrInvalidFilter
 )
 
 // IngredientError defines an error related to a recipe error

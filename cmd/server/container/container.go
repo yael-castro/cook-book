@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	ingredienthdlr "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
-	"github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
+	ingredientsbusiness "github.com/yael-castro/cb-search-engine-api/internal/ingredients/business"
+	ingredientshandler "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/input/handler"
+	ingredientsout "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/output"
+	recipesbusiness "github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
+	recipeshandler "github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/input/handler"
+	recipesout "github.com/yael-castro/cb-search-engine-api/internal/recipes/infrastructure/output"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -41,28 +43,37 @@ func injectHandler(ctx context.Context, e *echo.Echo) (err error) {
 	// MongoDB collections
 	recipesCollection := db.Collection("recipes")
 
-	// Secondary adapters
-	recipeFinder := output.NewRecipesFinder(recipesCollection)
-	recipeSaver := output.NewRecipesSaver(&db, logger)
+	// Driven adapters
+	recipeSaver := recipesout.NewRecipesSaver(&db, logger)
+	recipeFinder := recipesout.NewRecipesFinder(recipesCollection)
+	ingredientFinder := ingredientsout.NewIngredientsFinder()
 
 	// Ports for primary adapters
-	recipeSearcher := business.NewRecipesSearcher(recipeFinder)
-	recipeCreator := business.NewRecipeCreator(recipeSaver)
+	recipeSearcher := recipesbusiness.NewRecipesSearcher(recipeFinder)
+	recipeCreator := recipesbusiness.NewRecipeCreator(recipeSaver)
+	ingredientSearcher := ingredientsbusiness.NewIngredientsSearcher(ingredientFinder)
 
-	// Primary adapters
-
-	// Setting http error handler
-	e.HTTPErrorHandler = ingredienthdlr.ErrorHandler(handler.ErrorHandler(e.HTTPErrorHandler))
-
-	// Builds HTTP server
+	// Setting drive adapters
 	e.POST(
 		"/v1/recipes",
-		handler.PostRecipes(recipeCreator),
+		recipeshandler.PostRecipes(recipeCreator),
 	)
 
 	e.GET(
 		"/v1/recipes",
-		handler.GetRecipes(recipeSearcher),
+		recipeshandler.GetRecipes(recipeSearcher),
+	)
+
+	e.GET(
+		"/v1/ingredients",
+		ingredientshandler.GetIngredients(ingredientSearcher),
+	)
+
+	// Setting http error handler
+	e.HTTPErrorHandler = ingredientshandler.ErrorHandler(
+		recipeshandler.ErrorHandler(
+			e.HTTPErrorHandler,
+		),
 	)
 
 	return

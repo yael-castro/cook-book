@@ -29,11 +29,11 @@ type Recipe struct {
 	Ingredients []Ingredient `bson:",omitempty"`
 }
 
-func (r Recipe) ToBModel() *business.Recipe {
+func (r Recipe) ToBusiness() *business.Recipe {
 	ingredients := make([]business.Ingredient, 0, len(r.Ingredients))
 
 	for _, ingredient := range r.Ingredients {
-		ingredients = append(ingredients, output.BusinessIngredient(ingredient))
+		ingredients = append(ingredients, ingredient.ToBusiness())
 	}
 
 	return &business.Recipe{

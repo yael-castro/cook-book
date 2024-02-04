@@ -2,6 +2,10 @@ package business
 
 import "strconv"
 
+type MissingPaymentInfo struct {
+	Card string
+}
+
 // Supported values for RecipeError
 const (
 	_ RecipeError = iota

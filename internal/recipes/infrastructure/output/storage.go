@@ -2,7 +2,7 @@ package output
 
 import (
 	"context"
-	ingredients "github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/output"
+	"github.com/yael-castro/cb-search-engine-api/internal/ingredients/infrastructure/output"
 	"github.com/yael-castro/cb-search-engine-api/internal/recipes/business"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,6 +15,7 @@ func NewRecipeSaverFunc(databaseFunc func() (*mongo.Database, error), logger *lo
 		if err != nil {
 			return err
 		}
+		defer database.Client().Disconnect(ctx)
 
 		return NewRecipesSaver(database, logger).SaveRecipes(ctx, recipes...)
 	}
@@ -51,7 +52,7 @@ func (r recipesSaver) SaveRecipes(ctx context.Context, recipes ...*business.Reci
 
 		for _, ingredient := range recipe.Ingredients {
 			// TODO: set ingredient IDs
-			ingredientDocuments = append(ingredientDocuments, ingredients.NewIngredient(ingredient))
+			ingredientDocuments = append(ingredientDocuments, output.NewIngredient(ingredient))
 		}
 	}
 

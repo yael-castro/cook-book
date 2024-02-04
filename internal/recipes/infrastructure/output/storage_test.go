@@ -45,6 +45,10 @@ func TestRecipesCreator_CreateRecipes(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	t.Cleanup(func() {
+		mongoDB.Client().Disconnect(ctx)
+	})
+
 	saver := output.NewRecipesSaver(&mongoDB, log.Default())
 
 	for i, v := range cases {
@@ -53,6 +57,10 @@ func TestRecipesCreator_CreateRecipes(t *testing.T) {
 			if !errors.Is(err, v.expectedErr) {
 				t.Fatalf("expected error '%v' got '%v'", v.expectedErr, err)
 			}
+
+			t.Cleanup(func() {
+				mongoDB.Collection("recipes").DeleteMany(ctx, nil)
+			})
 
 			t.Log("Success!")
 		})
