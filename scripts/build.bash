@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Global variables
-module=github.com/yael-castro/cb-search-engine-api
+module=github.com/yael-castro/cook-book
 commit=$(git log --pretty=format:'%h' -n 1)
 
 # Command arguments
@@ -10,7 +10,7 @@ shift
 
 if [ "$subcommand" = "cli" ]; then
   cd cmd/cli || exit
-  path="$module/cmd/cli/container"
+  path="$module/internal/container"
 
   printf "\nTo compile the CLI the following variables are required.\n\n"
 
@@ -21,6 +21,7 @@ if [ "$subcommand" = "cli" ]; then
 
   if ! CGO=0 go build \
     -o ../../build/ \
+    -tags cli \
     -ldflags="-X '$path.mongoDSN=$dsn' -X '$path.mongoDB=$db' -X '$path.gitCommit=$commit'"
   then
     exit
@@ -34,14 +35,15 @@ if [ "$subcommand" = "cli" ]; then
   exit
 fi
 
-if [ "$subcommand" = "server" ]; then
-  cd cmd/server || exit
-  path="$module/cmd/server/container"
+if [ "$subcommand" = "http" ]; then
+  cd cmd/http || exit
+  path="$module/internal/container"
 
   printf "\nBuilding API REST in \"/build\" directory\n"
 
   if ! CGO=0 go build \
     -o ../../build/ \
+    -tags http \
     -ldflags="-X '$path.GitCommit=$commit'"
   then
     exit
@@ -49,7 +51,7 @@ if [ "$subcommand" = "server" ]; then
 
    cd ../../
 
-  echo "MD5 checksum: $(md5sum build/server)"
+  echo "MD5 checksum: $(md5sum build/http)"
   echo "Success build"
 
   exit

@@ -1,4 +1,4 @@
-module github.com/yael-castro/cb-search-engine-api
+module github.com/yael-castro/cook-book
 
 go 1.19
 
