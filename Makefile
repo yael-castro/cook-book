@@ -1,5 +1,5 @@
 cli:
-	./scripts/build.bash cli
+	bash ./scripts/build.bash cli
 
 http:
-	./scripts/build.bash http
+	bash ./scripts/build.bash http
