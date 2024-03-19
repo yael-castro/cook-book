@@ -10,6 +10,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: ls
+      - run: cat Makefile
       - name: Build http server
         run: make http
       - run: echo "🍏 This job's status is ${{ job.status }}."
