@@ -6,6 +6,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🐧 Compiling on a ${{ runner.os }} server in ${{ github.ref }}..."
+      - name: List files in workspace
+        run: |
+          ls ${{ github.workspace }}
       - run: ls
-      - run: make http
+      - name: Build http server
+        run: make http
       - run: echo "🍏 This job's status is ${{ job.status }}."
