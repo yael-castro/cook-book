@@ -6,5 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🐧 Compiling on a ${{ runner.os }} server in ${{ github.ref }}..."
+      - run: ls
       - run: make http
       - run: echo "🍏 This job's status is ${{ job.status }}."
