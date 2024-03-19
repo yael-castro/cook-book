@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "🐧 Compiling on a ${{ runner.os }} server in ${{ github.ref }}..."
+      - name: Check out repository code
+        uses: actions/checkout@v4
       - name: List files in workspace
         run: |
           ls ${{ github.workspace }}
