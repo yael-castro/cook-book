@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yael-castro/cook-book/internal/app/recipes/business"
 	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/input/command"
-	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output"
+	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output/mock"
+	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -50,8 +51,8 @@ func injectCommand(ctx context.Context, cmd *cobra.Command) (err error) {
 	}
 
 	// Driven adapters
-	recipesWriter := output.NewRecipesWriter()
-	recipesSaver := output.NewRecipeSaverFunc(databaseFunc, logger)
+	recipesWriter := mock.NewRecipesWriter()
+	recipesSaver := mongodb.NewRecipeSaverFunc(databaseFunc, logger)
 
 	// Ports for driving adapters
 	recipesGenerator := business.NewRecipeGenerator(recipesWriter, recipesSaver)
