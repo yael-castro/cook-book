@@ -1,6 +1,6 @@
 //go:build http
 
-package output_test
+package mongodb_test
 
 import (
 	"context"

@@ -13,11 +13,9 @@ const (
 
 // GenerateRecipes builds an instance of the unique implementation for the RecipeListGenerator interface
 func GenerateRecipes(generator business.RecipesGenerator) *cobra.Command {
-	const use = "generate"
-
 	cmd := &cobra.Command{
-		Use:       use,
-		Short:     "generates a set of random recipes",
+		Use:       "generate",
+		Short:     "generates a set of recipes based on different algorithms",
 		ValidArgs: []string{ingredientsFlag, recipesFlag},
 		Run:       generateRecipesFunc(generator),
 	}

@@ -1,4 +1,4 @@
-package output
+package mongodb
 
 import (
 	"github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output"

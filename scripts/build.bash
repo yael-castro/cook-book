@@ -9,7 +9,7 @@ subcommand="$1"
 shift
 
 if [ "$subcommand" = "cli" ]; then
-  cd cmd/cli || exit
+  cd cmd/cook-book-cli || exit
   path="$module/internal/container"
 
   printf "\nTo compile the CLI the following variables are required.\n\n"
@@ -29,14 +29,14 @@ if [ "$subcommand" = "cli" ]; then
 
   cd ../../
 
-  echo "MD5 checksum: $(md5sum build/cli)"
+  echo "MD5 checksum: $(md5sum build/cook-book-cli)"
   echo "Success build"
 
   exit
 fi
 
 if [ "$subcommand" = "http" ]; then
-  cd cmd/http || exit
+  cd cmd/cook-book-http || exit
   path="$module/internal/container"
 
   printf "\nBuilding API REST in \"/build\" directory\n"
@@ -51,7 +51,7 @@ if [ "$subcommand" = "http" ]; then
 
    cd ../../
 
-  echo "MD5 checksum: $(md5sum build/http)"
+  echo "MD5 checksum: $(md5sum build/cook-book-http)"
   echo "Success build"
 
   exit

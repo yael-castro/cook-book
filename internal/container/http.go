@@ -11,7 +11,7 @@ import (
 	ingredientsout "github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output"
 	recipesbusiness "github.com/yael-castro/cook-book/internal/app/recipes/business"
 	recipeshandler "github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/input/handler"
-	recipesout "github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output"
+	recipesmongo "github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -46,8 +46,8 @@ func injectHandler(ctx context.Context, e *echo.Echo) (err error) {
 	recipesCollection := db.Collection("recipes")
 
 	// Driven adapters
-	recipeSaver := recipesout.NewRecipesSaver(&db, logger)
-	recipeFinder := recipesout.NewRecipesFinder(recipesCollection)
+	recipeSaver := recipesmongo.NewRecipesSaver(&db, logger)
+	recipeFinder := recipesmongo.NewRecipesFinder(recipesCollection)
 	ingredientFinder := ingredientsout.NewIngredientsFinder()
 
 	// Ports for primary adapters
