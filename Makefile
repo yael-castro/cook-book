@@ -3,3 +3,5 @@ cli:
 
 http:
 	./scripts/build.bash http
+
+.PHONY: http cli

@@ -1,7 +1,8 @@
-package output
+package mongodb
 
 import (
 	"github.com/yael-castro/cook-book/internal/app/ingredients/business"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func NewIngredient(ingredient business.Ingredient) Ingredient {
@@ -20,13 +21,67 @@ type Ingredient struct {
 	Description            string `bson:",omitempty"`
 }
 
-// ToBusiness transforms the Ingredient object into an object that the business can understand.
-func (i Ingredient) ToBusiness() business.Ingredient {
+func (i Ingredient) ToBusinessModel() business.Ingredient {
 	return business.Ingredient{
 		NutritionalInformation: i.NutritionalInformation.ToBusiness(),
 		ID:                     i.ID,
 		Name:                   i.Name,
 		Description:            i.Description,
+	}
+}
+
+type Ingredients []Ingredient
+
+func (i Ingredients) ToBusinessModel() business.Ingredients {
+	ingredients := make([]business.Ingredient, len(i))
+
+	for index := range i {
+		ingredients[index] = i[index].ToBusinessModel()
+	}
+
+	return ingredients
+}
+
+func NewIngredientFilter(ingredientFilter business.IngredientFilter) IngredientFilter {
+	return (IngredientFilter)(ingredientFilter)
+}
+
+// IngredientFilter contains parameters to make ingredient searches
+type IngredientFilter struct {
+	Page    uint64 `bson:"-"`
+	Size    uint64 `bson:"-"`
+	Total   uint64 `bson:"-"`
+	Keyword string `bson:"-"`
+	Random  bool   `bson:"-"`
+}
+
+func (i IngredientFilter) Pipeline() bson.A {
+	return bson.A{
+		bson.D{
+			{
+				Key: "$sample",
+				Value: bson.D{
+					{
+						Key:   "size",
+						Value: i.Size,
+					},
+				},
+			},
+		},
+	}
+}
+
+func (i IngredientFilter) Document() bson.D {
+	return bson.D{
+		{
+			Key: "name",
+			Value: bson.D{
+				{
+					Key:   "$regex",
+					Value: i.Keyword,
+				},
+			},
+		},
 	}
 }
 

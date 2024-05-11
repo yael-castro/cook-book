@@ -1,16 +1,16 @@
 package mongodb
 
 import (
-	"github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output"
+	"github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output/mongodb"
 	"github.com/yael-castro/cook-book/internal/app/recipes/business"
 )
 
 // NewRecipe builds an instance of *Recipe based on the *model.Recipe
 func NewRecipe(recipe *business.Recipe) *Recipe {
-	ingredients := make([]Ingredient, 0, len(recipe.Ingredients))
+	ingredients := make(Ingredients, 0, len(recipe.Ingredients))
 
 	for _, ingredient := range recipe.Ingredients {
-		ingredients = append(ingredients, output.NewIngredient(ingredient))
+		ingredients = append(ingredients, mongodb.NewIngredient(ingredient))
 	}
 
 	return &Recipe{
@@ -23,25 +23,19 @@ func NewRecipe(recipe *business.Recipe) *Recipe {
 
 // Recipe kitchen recipe data
 type Recipe struct {
-	ID          int64        `bson:"_id"`
-	Name        string       `bson:",omitempty"`
-	Description string       `bson:",omitempty"`
-	Ingredients []Ingredient `bson:",omitempty"`
+	ID          int64       `bson:"_id"`
+	Name        string      `bson:",omitempty"`
+	Description string      `bson:",omitempty"`
+	Ingredients Ingredients `bson:",omitempty"`
 }
 
-func (r Recipe) ToBusiness() *business.Recipe {
-	ingredients := make([]business.Ingredient, 0, len(r.Ingredients))
-
-	for _, ingredient := range r.Ingredients {
-		ingredients = append(ingredients, ingredient.ToBusiness())
-	}
-
+func (r Recipe) ToBusinessModel() *business.Recipe {
 	return &business.Recipe{
 		ID:          r.ID,
 		Name:        r.Name,
 		Description: r.Description,
-		Ingredients: ingredients,
+		Ingredients: r.Ingredients.ToBusinessModel(),
 	}
 }
 
-type Ingredient = output.Ingredient
+type Ingredients = mongodb.Ingredients

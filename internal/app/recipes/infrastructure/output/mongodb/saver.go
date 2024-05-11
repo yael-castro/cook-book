@@ -2,7 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output"
+	ingredientsmongo "github.com/yael-castro/cook-book/internal/app/ingredients/infrastructure/output/mongodb"
 	"github.com/yael-castro/cook-book/internal/app/recipes/business"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -52,7 +52,7 @@ func (r recipesSaver) SaveRecipes(ctx context.Context, recipes ...*business.Reci
 
 		for _, ingredient := range recipe.Ingredients {
 			// TODO: set ingredient IDs
-			ingredientDocuments = append(ingredientDocuments, output.NewIngredient(ingredient))
+			ingredientDocuments = append(ingredientDocuments, ingredientsmongo.NewIngredient(ingredient))
 		}
 	}
 
@@ -60,7 +60,7 @@ func (r recipesSaver) SaveRecipes(ctx context.Context, recipes ...*business.Reci
 	transaction := func(ctx mongo.SessionContext) (any, error) {
 		opts := &options.InsertManyOptions{Ordered: &r.false}
 
-		_, err := r.recipesCollection.InsertMany(ctx, recipeDocuments, opts)
+		_, err := r.recipesCollection.InsertMany(ctx, recipeDocuments, opts) // TODO: evaluate if this is the desired behavior
 		if err != nil {
 			r.logger.Println(err)
 			return nil, err

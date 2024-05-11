@@ -1,11 +1,11 @@
-//go:build http
+//go:build integration
 
 package mongodb_test
 
 import (
 	"context"
 	"github.com/yael-castro/cook-book/internal/app/recipes/business"
-	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output"
+	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output/mongodb"
 	"github.com/yael-castro/cook-book/internal/container"
 	"github.com/yael-castro/cook-book/pkg/set"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -58,7 +58,7 @@ func BenchmarkRecipeFinder_FindRecipe(b *testing.B) {
 	}
 
 	recipeCollection := mongoDB.Collection("recipes")
-	finder := output.NewRecipesFinder(recipeCollection)
+	finder := mongodb.NewRecipesFinder(recipeCollection)
 
 	for i, c := range cases {
 		b.Log("INGREDIENT NUMBER:", len(c.ingredients))

@@ -1,4 +1,4 @@
-//go:build http
+//go:build integration
 
 package mongodb_test
 
@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/yael-castro/cook-book/internal/app/recipes/business"
-	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output"
+	"github.com/yael-castro/cook-book/internal/app/recipes/infrastructure/output/mongodb"
 	"github.com/yael-castro/cook-book/internal/container"
 	"go.mongodb.org/mongo-driver/mongo"
 	"io"
@@ -51,7 +51,7 @@ func TestRecipesCreator_CreateRecipes(t *testing.T) {
 		mongoDB.Client().Disconnect(ctx)
 	})
 
-	saver := output.NewRecipesSaver(&mongoDB, log.Default())
+	saver := mongodb.NewRecipesSaver(&mongoDB, log.Default())
 
 	for i, v := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
