@@ -11,7 +11,7 @@ The API is composed of two parts, the first is an `REST API` that helps to manag
 ### CLI
 ###### How to install
 ```shell
-go install github.com/yael/cook-cook/cmd/cook-book-cli@master
+go install github.com/yael/cook-cook/cmd/cook-book-cli@latest
 ```
 ###### See how to use
 ```shell
@@ -21,16 +21,16 @@ cook-book-cli
 ### HTTP
 ###### How to install 
 ```shell
-go install github.com/yael-castro/cook-book/cmd/cook-book-http@master
+go install github.com/yael-castro/cook-book/cmd/cook-book-http@latest
 ```
 ###### Start the server
 ```shell
 cook-book-http
 ```
 ## How to use from source
+All compiled binaries will put in the `build` directory
 ### CLI
 ###### Compile
-Follow the instructions below to compile the binary file for the `CLI` in the `/build` directory
 ```shell
 make cli
 ```
@@ -40,7 +40,6 @@ make cli
 ```
 ### REST API
 ###### Compile
-Follow the instructions below to compile the binary file for the `REST API` in the `/build` directory
 ```shell
 make http
 ```

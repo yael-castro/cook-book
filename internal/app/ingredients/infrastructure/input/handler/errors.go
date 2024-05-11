@@ -9,7 +9,7 @@ import (
 
 func ErrorHandler(handler echo.HTTPErrorHandler) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
-		as := business.RecipeError(0)
+		var as business.RecipeError
 
 		if !errors.As(err, &as) {
 			handler(err, c)
@@ -24,9 +24,10 @@ func ErrorHandler(handler echo.HTTPErrorHandler) echo.HTTPErrorHandler {
 		switch as {
 		case
 			business.ErrInvalidRecipe,
-			business.ErrInvalidPageSize,
+			business.ErrInvalidRecipes,
+			business.ErrInvalidIngredientID,
 			business.ErrInvalidIngredients,
-			business.ErrInvalidIngredientID:
+			business.ErrInvalidPageSize:
 			_ = c.JSON(http.StatusBadRequest, message)
 		default:
 			_ = c.JSON(http.StatusInternalServerError, message)

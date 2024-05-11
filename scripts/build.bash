@@ -1,60 +1,47 @@
 #!/bin/bash
 
-# Global variables
-module=github.com/yael-castro/cook-book
+# Variables for only read
+container="github.com/yael-castro/cook-book/internal/container"
 commit=$(git log --pretty=format:'%h' -n 1)
 
 # Command arguments
 subcommand="$1"
 shift
 
+function build() {
+    cd "./cmd/$binary"
+
+    if ! CGO=0 go build \
+      -o ../../build/ \
+      -tags "$tags" \
+      -ldflags="-X '$container.GitCommit=$commit'"
+    then
+      exit
+    fi
+
+    cd ../../
+
+    echo "MD5 checksum: $(md5sum "build/$binary")"
+    echo "Success build"
+    exit 0
+}
+
+
 if [ "$subcommand" = "cli" ]; then
-  cd cmd/cook-book-cli || exit
-  path="$module/internal/container"
+  binary="cook-book-cli"
+  tags="cli"
 
-  printf "\nTo compile the CLI the following variables are required.\n\n"
-
-  read -rp "DB (test): " db
-  read -rp "DSN (mongodb://localhost:27017): " dsn
-
-  printf "\nBuilding CLI in \"/build\" directory\n"
-
-  if ! CGO=0 go build \
-    -o ../../build/ \
-    -tags cli \
-    -ldflags="-X '$path.mongoDSN=$dsn' -X '$path.mongoDB=$db' -X '$path.gitCommit=$commit'"
-  then
-    exit
-  fi
-
-  cd ../../
-
-  echo "MD5 checksum: $(md5sum build/cook-book-cli)"
-  echo "Success build"
-
-  exit
+  printf "\nBuilding CLI in \"build\" directory\n"
+  build
 fi
 
 if [ "$subcommand" = "http" ]; then
-  cd cmd/cook-book-http || exit
-  path="$module/internal/container"
+  binary=cook-book-http
+  tags="http"
 
-  printf "\nBuilding API REST in \"/build\" directory\n"
-
-  if ! CGO=0 go build \
-    -o ../../build/ \
-    -tags http \
-    -ldflags="-X '$path.GitCommit=$commit'"
-  then
-    exit
-  fi
-
-   cd ../../
-
-  echo "MD5 checksum: $(md5sum build/cook-book-http)"
-  echo "Success build"
-
-  exit
+  printf "\nBuilding API REST in \"build\" directory\n"
+  build
 fi
 
-echo "subcommand \"$subcommand\" is not valid"
+exit 1
+echo "Invalid subcommand: $subcommand"

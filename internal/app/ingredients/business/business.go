@@ -17,7 +17,7 @@ type ingredientsSearcher struct {
 	finder IngredientsFinder
 }
 
-func (i ingredientsSearcher) SearchIngredients(ctx context.Context, filter *IngredientFilter) ([]Ingredient, error) {
+func (i ingredientsSearcher) SearchIngredients(ctx context.Context, filter *IngredientFilter) (Ingredients, error) {
 	if err := filter.Validate(); err != nil {
 		return nil, err
 	}

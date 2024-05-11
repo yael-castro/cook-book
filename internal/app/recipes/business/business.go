@@ -20,7 +20,7 @@ type recipesCreator struct {
 
 func (r recipesCreator) CreateRecipes(ctx context.Context, recipes ...*Recipe) error {
 	for _, recipe := range recipes {
-		if err := recipe.Validate(); err != nil {
+		if err := recipe.Validate(); err != nil { // TODO: validate if all ingredients has an id
 			return err
 		}
 	}

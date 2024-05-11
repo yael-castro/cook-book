@@ -15,9 +15,7 @@ type Mass int64
 
 // IngredientFilter contains parameters to make ingredient searches
 type IngredientFilter struct {
-	Page  uint64
-	Size  uint64
-	Total uint64
+	Page, Size, Total uint64
 	// Keyword is used to compare if match partially with an ingredient name
 	Keyword string
 	// Random indicates if the ingredients will be searched randomly.
@@ -36,6 +34,18 @@ func (f IngredientFilter) Validate() error {
 	}
 
 	return nil
+}
+
+type Ingredients []Ingredient
+
+func (i Ingredients) Validate() (err error) {
+	for index := range i {
+		if err = i[index].Validate(); err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 type Ingredient struct {

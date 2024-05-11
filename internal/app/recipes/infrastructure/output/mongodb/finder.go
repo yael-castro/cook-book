@@ -85,15 +85,15 @@ func (s recipesFinder) FindRecipes(ctx context.Context, filter *business.RecipeF
 
 	// NOTE: avoid the method cursor.All() because it uses reflection to iterate the cursor values
 	for cursor.Next(ctx) {
-		recipe := &Recipe{}
+		recipe := Recipe{}
 
-		err = cursor.Decode(recipe)
+		err = cursor.Decode(&recipe)
 		if err != nil {
 			s.logger.Println(err)
 			return
 		}
 
-		slice = append(slice, recipe.ToBusiness())
+		slice = append(slice, recipe.ToBusinessModel())
 	}
 
 	return
