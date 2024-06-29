@@ -11,25 +11,24 @@ import (
 )
 
 func main() {
-	// Creates main context
-	ctx, cancelFunc := context.WithCancel(context.Background())
-
-	signalCh := make(chan os.Signal)
-	signal.Notify(signalCh, os.Interrupt)
-
-	go func() {
-		<-signalCh
-		cancelFunc()
-	}()
+	// Building main context
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer stop()
 
 	// DI container input action!
 	var cmd cobra.Command
 
+	// DI container in action!
+	// TODO: close connections with external repositories
 	err := container.Inject(ctx, &cmd)
 	if err != nil {
 		cmd.PrintErr(err)
 		return
 	}
 
-	_ = cmd.ExecuteContext(ctx) // TODO: evaluate error for exit code
+	err = cmd.ExecuteContext(ctx) // TODO: evaluate error for exit code
+	if err != nil {
+		cmd.PrintErr(err)
+		return
+	}
 }
