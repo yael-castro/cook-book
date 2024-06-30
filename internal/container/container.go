@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"os"
 )
 
 // GitCommit is the git hash from the binary was built.
@@ -22,24 +19,11 @@ func inject(ctx context.Context, a any) error {
 }
 
 func injectMongoDatabase(ctx context.Context, database *mongo.Database) (err error) {
-	dsn, dbName := os.Getenv("MONGO_DSN"), os.Getenv("MONGO_DB")
-
-	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(dsn))
+	db, err := MongoDatabase(ctx)
 	if err != nil {
-		return
+		return err
 	}
 
-	err = mongoClient.Ping(ctx, readpref.Primary())
-	if err != nil {
-		return
-	}
-
-	*database = *mongoClient.Database(dbName)
-
-	err = database.Client().Ping(ctx, readpref.Primary())
-	if err != nil {
-		return
-	}
-
+	*database = *db
 	return
 }
