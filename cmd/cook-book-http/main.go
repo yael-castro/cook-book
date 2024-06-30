@@ -9,10 +9,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"time"
 )
 
 func main() {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		const defaultPort = "8080"
@@ -29,14 +33,16 @@ func main() {
 	e := echo.New()
 
 	// DI container in action!
-	// TODO: close connections with external repositories
 	err := container.Inject(ctx, e)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		<-ctx.Done()
 
 		const gracePeriod = 10 * time.Second
@@ -44,6 +50,21 @@ func main() {
 		defer cancelFunc()
 
 		_ = e.Shutdown(ctx)
+		log.Println("Shutting down")
+
+		db, err := container.MongoDatabase(ctx)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		err = db.Client().Disconnect(ctx)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		log.Println("Disconnected from database")
 	}()
 
 	log.Printf("Server version '%s' is running on port '%s'\n", container.GitCommit, port)

@@ -19,16 +19,11 @@ func main() {
 	var cmd cobra.Command
 
 	// DI container in action!
-	// TODO: close connections with external repositories
 	err := container.Inject(ctx, &cmd)
 	if err != nil {
 		cmd.PrintErr(err)
 		return
 	}
 
-	err = cmd.ExecuteContext(ctx) // TODO: evaluate error for exit code
-	if err != nil {
-		cmd.PrintErr(err)
-		return
-	}
+	_ = cmd.ExecuteContext(ctx) // TODO: evaluate error for exit code
 }
